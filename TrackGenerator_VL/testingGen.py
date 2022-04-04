@@ -50,9 +50,19 @@ data1, tangent_out3, normal_out3=TrackGenerator.add_bezier([0,0], [30,30],[0,1],
 
 # my_list = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
 # data1, tangent_out3, normal_out3=random.choice(my_list)(p0, p1, pn_1)
+p1 = data1[256]
+p2 = data1[256+1]
+
+                        
+p3 = data1[257]
+p4 = data1[257+1]
+
+print(TrackGenerator.doIntersect(p1, p2, p3, p4))
 
 #print(TrackGenerator.check_if_overlap(data1))
-print(TrackGenerator.intersectsWithSelf(data1))
+#print(TrackGenerator.intersectsWithSelf(data1))
+
+
 # data1, tangent_out1, normal_out1=TrackGenerator.add_constant_turn(p0, pn_3, p3,param1)
 # data2, tangent_out2, normal_out2=TrackGenerator.add_straight(data1[-1], (tangent_out1), (normal_out1), param2)
 # data3, tangent_out3, normal_out3=TrackGenerator.add_constant_turn(data2[-1], tangent_out2,  (normal_out1), param2)
