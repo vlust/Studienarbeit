@@ -473,8 +473,8 @@ class TrackGenerator:
                                 p3 = points[j]
                                 p4 = points[j+1]
 
-                                if p3 is not p2 and p3 is not p1:
-                                        print(str(i), " ", str(j))
+                                if j is not i-1 and j is not i and j is not i+1:
+                                        #print(str(i), " ", str(j))
                                         if TrackGenerator.doIntersect(p1,p2, p3,p4): return True 
                 return False
                 
