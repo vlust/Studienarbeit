@@ -5,7 +5,7 @@ from scipy.special import binom
 from random import uniform
 
 class TrackGenerator:
-        FIDELITY = 350
+        FIDELITY = 50
         TRACK_WIDTH = 3.5
         MIN_STRAIGHT = 20
         MAX_STRAIGHT = 80
@@ -456,6 +456,8 @@ class TrackGenerator:
 
         def intersectsWithSelf(curvePoints):
                 points = curvePoints
+                x=False
+                #print(len(points))
                 for i in range(len(points) - 1):
 
                         #Point pair 1
@@ -467,12 +469,13 @@ class TrackGenerator:
                                 p3 = points[j]
                                 p4 = points[j+1]
 
-                                if j is not i-1 and j is not i and j is not i+1:
+                                if i != j-1 and i != j and i != j+1:
                                         if TrackGenerator.doIntersect(p1,p2, p3,p4): 
                                                 print(str(i), " ", str(j))
                                                 return True 
-                                else:
-                                        continue
+                                        else:
+                                                continue
+                
                 return False
                 
         def visualize(trackdata):
