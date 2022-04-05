@@ -453,12 +453,6 @@ class TrackGenerator:
                 
                 # If none of the cases
                 return False
-        # def ccw(A,B,C):
-        #         return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
-
-        # # Return true if line segments AB and CD intersect
-        # def intersect(A,B,C,D):
-        #         return TrackGenerator.ccw(A,C,D) != TrackGenerator.ccw(B,C,D) and TrackGenerator.ccw(A,B,C) != TrackGenerator.ccw(A,B,D)
 
         def intersectsWithSelf(curvePoints):
                 points = curvePoints
