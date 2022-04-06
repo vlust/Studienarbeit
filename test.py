@@ -5,5 +5,3 @@
 # mylist = list(dict.fromkeys(mylist))
 
 # print(mylist) 
-x=[1,2,3,4,5,6,8]
-print(x[:-1])

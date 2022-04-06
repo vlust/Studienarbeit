@@ -7,11 +7,13 @@ from random import uniform
 class TrackGenerator:
         FIDELITY = 50
         TRACK_WIDTH = 3.5
-        MIN_STRAIGHT = 20
+        MIN_STRAIGHT = 5
         MAX_STRAIGHT = 80
-        MIN_CONSTANT_TURN = 10
-        MAX_CONSTANT_TURN = 25
+        #MIN_CONSTANT_TURN = 10
+        MIN_CONSTANT_TURN = 35
+        MAX_CONSTANT_TURN = 50
         MAX_TRACK_LENGTH = 105
+        MAX_ELEMENTS = 3
  
         ################################################################
         #FUNKTIONEN UM TRACKKOMPONENTE HINZUFÜGEN
@@ -88,7 +90,7 @@ class TrackGenerator:
 
                 # Prepare outputs
                 bez_out = TrackGenerator.parametric_bezier(control_points)
-                normal_out = tangent_out
+                normal_out = get_normal_vector(tangent_out)
                 
 
                 return (
