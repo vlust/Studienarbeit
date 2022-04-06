@@ -115,19 +115,28 @@ def generate_randomTrack():
       break #Generation failed due to to many tries
     if elementCounter == TrackGenerator.MAX_ELEMENTS:
       break #generation finished due to max number of elements
-    
+    print(f"counter {elementCounter}")
     cur_track_data=[]
     
-    cur_track_data=track_data
+    
+
+    
+    print(f"TD_len {len(track_data)}")
+
+    
+    
+    cur_track_data=track_data.copy()
 
     if failedElement:
       data_out, tangent_out, normal_out, finished, elementType= randomElement(point_in, tangent_in, normal_in)
     else:
       data_out, tangent_out, normal_out, finished, elementType= randomElement(point_in, tangent_in, normal_in)
-
+    print(f"data_out_len {len(data_out)}")
     cur_track_data.extend(data_out[1:])
-
+    #print(f"TD_len {len(track_data)}")
     if check_if_viable(cur_track_data, elementType, elementList[-1]):
+      print(f"TD_len {len(track_data)}")
+      print("viable")
       failedElement=False
       track_data=cur_track_data
       elementList.append(elementType)
@@ -139,21 +148,22 @@ def generate_randomTrack():
       continue
     else:
       print("failed")
+      print(f"TD_len {len(track_data)}")
       failedCounter += 1
       failedElement=True
       continue
   return track_data, error, elementList
 
 
-def check_if_viable(track_data, newElement, lastElement):
+def check_if_viable(toCheck_track_data, newElement, lastElement):
   """
   checks if added track element is viable
   """
   doubleStraight = newElement == lastElement == 1
-  return not TrackGenerator.intersectsWithSelf(track_data) and not doubleStraight
+  return not TrackGenerator.intersectsWithSelf(toCheck_track_data) and not doubleStraight
 
 
 data, error, _=generate_randomTrack()
-print(error)
-print(data)
+print(f"ERROR {error}")
+#print(data)
 TrackGenerator.visualize(data)
