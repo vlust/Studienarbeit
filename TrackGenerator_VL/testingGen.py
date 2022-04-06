@@ -52,22 +52,11 @@ import random
 # data1, tangent_out3, normal_out3=random.choice(my_list)(p0, p1, pn_1)
 # data2, tangent_out2, normal_out2=TrackGenerator.add_straight(data1[-1], (tangent_out3), (normal_out3), param2)
 
-
-
-#print(TrackGenerator.check_if_overlap(data1))
-
-
-
 # data1, tangent_out1, normal_out1=TrackGenerator.add_constant_turn(p0, pn_3, p3,param1)
 # data2, tangent_out2, normal_out2=TrackGenerator.add_straight(data1[-1], (tangent_out1), (normal_out1), param2)
 # data3, tangent_out3, normal_out3=TrackGenerator.add_constant_turn(data2[-1], tangent_out2,  (normal_out1), param2)
 #data3, tangent_out3, normal_out3=TrackGenerator.add_bezier(data2[-1], p5,(tangent_out2),(tangent_out2), param33)
-# print(len(data1))
-# print(len(data2))
-# print(len(data3))
-# data1=data1[:-1]
-# data1.extend(data2[:-1])
-# data1.extend(data3[:-1])
+
 
 def randomElement(point_in, tangent_in, normal_in, newElement=None):
   """
@@ -76,16 +65,25 @@ def randomElement(point_in, tangent_in, normal_in, newElement=None):
   if newElement is None:
     newElement=True
 
+  track_element = 0
+
   finished=False #last track element?
   if newElement:
+    
+    #functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn, TrackGenerator.emptyElement]
     functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
-    data_out, tangent_out, normal_out=random.choice(functions)(point_in, tangent_in, normal_in)
+    i = random.choice(range(len(functions)))
+    data_out, tangent_out, normal_out=(functions)[i](point_in, tangent_in, normal_in)
+
   else:
     functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
-    data_out, tangent_out, normal_out=random.choice(functions)(point_in, tangent_in, normal_in)
+    i = random.choice(range(len(functions)))
+    data_out, tangent_out, normal_out=(functions)[i](point_in, tangent_in, normal_in)
     if data_out is None:
       finished=True
-  return data_out, tangent_out, normal_out, finished
+  track_element = i
+
+  return data_out, tangent_out, normal_out, finished, track_element
 
 def generate_randomTrack():
   """
@@ -95,22 +93,44 @@ def generate_randomTrack():
   point_in = [0,0]
   tangent_in = [1,0]
   normal_in = [0,1]
-  finished = False
+ 
+  #Trackdata
   track_data = []
   cur_track_data= []
+
+  #track elements
+  elementList=[999]
   elementCounter = 0
-  failed = False
-  
+
+  # exit conditions
+  error=False
+  failedCounter = 0
+  failedElement = False
+  finished = False
+
+  #loop for generating track elemnts
   while finished is False:
-    if elementCounter == 4:
-      break
-    data_out, tangent_out, normal_out, finished = randomElement(point_in, tangent_in, normal_in)
-    cur_track_data=track_data
-    cur_track_data.extend(data_out[1:])
+    if failedCounter == 10:
+      error=True
+      break #Generation failed due to to many tries
+    if elementCounter == TrackGenerator.MAX_ELEMENTS:
+      break #generation finished due to max number of elements
     
-    if check_if_viable(cur_track_data):
-      failed=False
+    cur_track_data=[]
+    
+    cur_track_data=track_data
+
+    if failedElement:
+      data_out, tangent_out, normal_out, finished, elementType= randomElement(point_in, tangent_in, normal_in)
+    else:
+      data_out, tangent_out, normal_out, finished, elementType= randomElement(point_in, tangent_in, normal_in)
+
+    cur_track_data.extend(data_out[1:])
+
+    if check_if_viable(cur_track_data, elementType, elementList[-1]):
+      failedElement=False
       track_data=cur_track_data
+      elementList.append(elementType)
       #prep for new data
       point_in = data_out[-1]
       tangent_in = tangent_out
@@ -118,21 +138,22 @@ def generate_randomTrack():
       elementCounter += 1
       continue
     else:
-      failed=True
+      print("failed")
+      failedCounter += 1
+      failedElement=True
       continue
-  return track_data
+  return track_data, error, elementList
 
 
-def check_if_viable(track_data):
+def check_if_viable(track_data, newElement, lastElement):
   """
   checks if added track element is viable
   """
-  return True
+  doubleStraight = newElement == lastElement == 1
+  return not TrackGenerator.intersectsWithSelf(track_data) and not doubleStraight
 
-TrackGenerator.visualize(generate_randomTrack())
 
-#data1=list(set(map(tuple, data1)))
-# print(len(data1))
-# print(TrackGenerator.intersectsWithSelf(data1))
-
-# TrackGenerator.visualize(data1)
+data, error, _=generate_randomTrack()
+print(error)
+print(data)
+TrackGenerator.visualize(data)
