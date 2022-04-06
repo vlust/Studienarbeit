@@ -18,6 +18,10 @@ class TrackGenerator:
         ################################################################
         #FUNKTIONEN UM TRACKKOMPONENTE HINZUFÜGEN
         ################################################################
+        def emptyElement(point_in,
+                                tangent_in,
+                                normal_in):
+                return None, tangent_in, normal_in
 
         def add_straight(point_in,
                         tangent_in,

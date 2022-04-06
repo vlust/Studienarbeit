@@ -70,13 +70,13 @@ def randomElement(point_in, tangent_in, normal_in, newElement=None):
   finished=False #last track element?
   if newElement:
     
-    #functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn, TrackGenerator.emptyElement]
     functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
+    #functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
     i = random.choice(range(len(functions)))
     data_out, tangent_out, normal_out=(functions)[i](point_in, tangent_in, normal_in)
 
   else:
-    functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
+    functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn, TrackGenerator.emptyElement]
     i = random.choice(range(len(functions)))
     data_out, tangent_out, normal_out=(functions)[i](point_in, tangent_in, normal_in)
     if data_out is None:
@@ -115,31 +115,23 @@ def generate_randomTrack():
       break #Generation failed due to to many tries
     if elementCounter == TrackGenerator.MAX_ELEMENTS:
       break #generation finished due to max number of elements
-    print(f"counter {elementCounter}")
+    
     cur_track_data=[]
-    
-    
-
-    
-    print(f"TD_len {len(track_data)}")
-
-    
-    
     cur_track_data=track_data.copy()
 
     if failedElement:
       data_out, tangent_out, normal_out, finished, elementType= randomElement(point_in, tangent_in, normal_in)
     else:
       data_out, tangent_out, normal_out, finished, elementType= randomElement(point_in, tangent_in, normal_in)
-    print(f"data_out_len {len(data_out)}")
+    if finished:
+      break
     cur_track_data.extend(data_out[1:])
     #print(f"TD_len {len(track_data)}")
     if check_if_viable(cur_track_data, elementType, elementList[-1]):
-      print(f"TD_len {len(track_data)}")
-      print("viable")
       failedElement=False
       track_data=cur_track_data
       elementList.append(elementType)
+
       #prep for new data
       point_in = data_out[-1]
       tangent_in = tangent_out
@@ -147,8 +139,6 @@ def generate_randomTrack():
       elementCounter += 1
       continue
     else:
-      print("failed")
-      print(f"TD_len {len(track_data)}")
       failedCounter += 1
       failedElement=True
       continue
