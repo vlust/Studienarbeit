@@ -59,7 +59,7 @@ import random
 
 
 
-data, error, _=TrackGenerator.generate_randomTrack()
+data, cones,_, error=TrackGenerator.generate_randomTrack()
 print(f"ERROR {error}")
-#print(data)
-TrackGenerator.visualize(data)
+TrackGenerator.visualize_cones(cones)
+TrackGenerator.visualize_track(data)

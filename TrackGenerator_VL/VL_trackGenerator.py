@@ -36,7 +36,7 @@ class TrackGenerator:
                 elementCounter = 0
 
                 # exit conditions
-                error=False
+                #error=False
                 failedCounter = 0
                 failedElement = False
                 finished = False
@@ -44,13 +44,13 @@ class TrackGenerator:
                 #loop for generating track elemnts
                 while finished is False:
                         if failedCounter == 10:
-                                error=True
-                                break #Generation failed due to to many tries
+                                
+                                return None, None, True #Generation failed due to to many tries
                         if elementCounter == TrackGenerator.MAX_ELEMENTS:
                                 break #generation finished due to max number of elements
 
-                        cur_track_data=[]
-                        cur_track_data=track_data.copy()
+                        cur_track_data = []
+                        cur_track_data = track_data.copy()
 
                         if failedElement:
                                 data_out, tangent_out, normal_out, finished, elementType= TrackGenerator.randomElement(point_in, tangent_in, normal_in)
@@ -75,7 +75,8 @@ class TrackGenerator:
                                 failedCounter += 1
                                 failedElement=True
                                 continue
-                return track_data, error, elementList
+                conedata=TrackGenerator.get_cones(track_data)
+                return track_data, conedata, elementList, False
 
         def randomElement(point_in, tangent_in, normal_in, newElement=None):
                 """
@@ -456,8 +457,8 @@ class TrackGenerator:
                         if (aSide_OK):
                                 x = (a_side_point[0])
                                 y = (a_side_point[1])
-                                to_return.append((x, y, "A"))
-                                to_return.append((cur_point[0], cur_point[1],"AM"))
+                                to_return.append((x, y, "Y"))
+                                to_return.append((cur_point[0], cur_point[1],"YM"))
                                 all_points_aSide.append(a_side_point)
                         if (bSide_OK):
                                 x = (b_side_point[0])
@@ -548,10 +549,10 @@ class TrackGenerator:
 
                 #sort cone data
                 for i in range(len(conedata)):
-                        if(conedata[i][2]=='A'):
+                        if(conedata[i][2]=='Y'):
                                 ax.append(conedata[i][0])
                                 ay.append(conedata[i][1])
-                        if(conedata[i][2]=='AM'):
+                        if(conedata[i][2]=='YM'):
                                 amx.append(conedata[i][0])
                                 amy.append(conedata[i][1])
                                 
@@ -569,6 +570,25 @@ class TrackGenerator:
                 # plt.scatter(amx,amy,color='green')           
                 plt.axis('scaled')
                 plt.show()
+                
+        def visualize_track(track_data):
+                x, y=map(list, zip(*track_data))
+                plt.plot(x,y)
+                plt.axis('scaled')
+                plt.show()
+
+        def visualize_cones(conedata):
+                yellow_cones=[x for x in conedata if x[2]=='Y']
+                blue_cones=[x for x in conedata if x[2]=='B']
+                print(blue_cones)
+                yellow_x, yellow_y, _=map(list, zip(*yellow_cones))
+                blue_x, blue_y, _=map(list, zip(*blue_cones))
+
+                plt.plot(yellow_x,yellow_y,'*',color='orange')
+                plt.plot(blue_x,blue_y,'*',color='blue')
+                plt.axis('scaled')
+                plt.show()
+
 
                         
 
