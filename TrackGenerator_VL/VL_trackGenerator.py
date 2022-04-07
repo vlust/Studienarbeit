@@ -2,19 +2,116 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utilities import *
 from scipy.special import binom
-from random import uniform
+from random import uniform, choice
 
 class TrackGenerator:
         FIDELITY = 50
         TRACK_WIDTH = 3.5
         MIN_STRAIGHT = 5
         MAX_STRAIGHT = 80
-        #MIN_CONSTANT_TURN = 10
-        MIN_CONSTANT_TURN = 35
-        MAX_CONSTANT_TURN = 50
+        MIN_CONSTANT_TURN = 10
+        MAX_CONSTANT_TURN = 45
         MAX_TRACK_LENGTH = 105
         MAX_ELEMENTS = 3
- 
+
+        ################################################################
+        #MAKRO GENERATOR FUNCTIONS
+        ################################################################
+        
+        def generate_randomTrack():
+                """
+                generates random track with max amount of TrackGenerator.MAX_ELEMENTS track elements
+                """
+                #Starting position
+                point_in = [0,0]
+                tangent_in = [1,0]
+                normal_in = [0,1]
+
+                #Trackdata
+                track_data = []
+                cur_track_data= []
+
+                #track elements
+                elementList=[999]
+                elementCounter = 0
+
+                # exit conditions
+                error=False
+                failedCounter = 0
+                failedElement = False
+                finished = False
+
+                #loop for generating track elemnts
+                while finished is False:
+                        if failedCounter == 10:
+                                error=True
+                                break #Generation failed due to to many tries
+                        if elementCounter == TrackGenerator.MAX_ELEMENTS:
+                                break #generation finished due to max number of elements
+
+                        cur_track_data=[]
+                        cur_track_data=track_data.copy()
+
+                        if failedElement:
+                                data_out, tangent_out, normal_out, finished, elementType= TrackGenerator.randomElement(point_in, tangent_in, normal_in)
+                        else:
+                                data_out, tangent_out, normal_out, finished, elementType= TrackGenerator.randomElement(point_in, tangent_in, normal_in)
+                        if finished:
+                                break
+                        cur_track_data.extend(data_out[1:])
+                        #print(f"TD_len {len(track_data)}")
+                        if TrackGenerator.check_if_viable(cur_track_data, elementType, elementList[-1]):
+                                failedElement=False
+                                track_data=cur_track_data
+                                elementList.append(elementType)
+
+                                #prep for new data
+                                point_in = data_out[-1]
+                                tangent_in = tangent_out
+                                normal_in = normal_out
+                                elementCounter += 1
+                                continue
+                        else:
+                                failedCounter += 1
+                                failedElement=True
+                                continue
+                return track_data, error, elementList
+
+        def randomElement(point_in, tangent_in, normal_in, newElement=None):
+                """
+                Adds new random Track element (if newElement is TRUE then empty track element is not an option)
+                """
+                if newElement is None:
+                        newElement=True
+
+                track_element = 0
+
+                finished=False #last track element?
+                if newElement:
+                
+                        functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
+                        #functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
+                        i = choice(range(len(functions)))
+                        data_out, tangent_out, normal_out=(functions)[i](point_in, tangent_in, normal_in)
+
+                else:
+                        functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn, TrackGenerator.emptyElement]
+                        i = choice(range(len(functions)))
+                        data_out, tangent_out, normal_out=(functions)[i](point_in, tangent_in, normal_in)
+                if data_out is None:
+                        finished=True
+                        track_element = i
+
+                return data_out, tangent_out, normal_out, finished, track_element
+
+                
+        def check_if_viable(toCheck_track_data, newElement, lastElement):
+                """
+                checks if added track element is viable
+                """
+                doubleStraight = newElement == lastElement == 1
+                return not TrackGenerator.intersectsWithSelf(toCheck_track_data) and not doubleStraight
+
         ################################################################
         #FUNKTIONEN UM TRACKKOMPONENTE HINZUFÜGEN
         ################################################################
@@ -110,10 +207,8 @@ class TrackGenerator:
                 MAX_ALPHA=deg_to_rad(75)
                 MAX_BETA=-deg_to_rad(60)
                 r=uniform(30, 50)
-                #r=30
                 #POINT_UT FROM ALPHA
                 alpha=uniform(-MAX_ALPHA,MAX_ALPHA)
-                #alpha=MAX_ALPHA
                 newTan=(tangent_in[0]* np.cos(alpha) + tangent_in[1] *np.sin(alpha), -tangent_in[0]*np.sin(alpha) + tangent_in[1]* np.cos(alpha))   #direction towards point out
                 point_out= (point_in[0]+newTan[0]*r,point_in[1]+newTan[1]*r)    #move by r
 
