@@ -529,65 +529,42 @@ class TrackGenerator:
                 
                 return False
                 
-        def visualize(trackdata):
+        def visualize_all(trackdata, conedata):
                 #   sort track data             
-                x = np.empty(len(trackdata))
-                y = np.empty(len(trackdata))
-                for i in range(len(trackdata)):
-                        x[i] = trackdata[i][0]
-                        y[i] = trackdata[i][1] 
-                conedata=TrackGenerator.get_cones(trackdata)
-                ax=[]
-                ay=[]
-                bx=[]
-                by=[]
+                x, y = TrackGenerator.visualize_track(trackdata)
+                yellow_x, yellow_y, blue_x, blue_y=TrackGenerator.visualize_cones(conedata)
 
-                amx=[]
-                amy=[]
-                bmx=[]
-                bmy=[]
+                plt.plot(x, y)
+                plt.plot(yellow_x,yellow_y,'*',color='orange')
+                plt.plot(blue_x,blue_y,'*',color='blue')
 
-                #sort cone data
-                for i in range(len(conedata)):
-                        if(conedata[i][2]=='Y'):
-                                ax.append(conedata[i][0])
-                                ay.append(conedata[i][1])
-                        if(conedata[i][2]=='YM'):
-                                amx.append(conedata[i][0])
-                                amy.append(conedata[i][1])
-                                
-                        if(conedata[i][2]=='B'):
-                                bx.append(conedata[i][0])
-                                by.append(conedata[i][1])
-                        if(conedata[i][2]=='BM'):
-                                bmx.append(conedata[i][0])
-                                bmy.append(conedata[i][1])
-                #plots
-                plt.plot(x,y)
-                plt.plot(ax,ay,'*',color='orange')
-                plt.plot(bx,by,'*',color='blue')
-                # plt.scatter(bmx,bmy,color='red')   
-                # plt.scatter(amx,amy,color='green')           
                 plt.axis('scaled')
                 plt.show()
-                
+
+        def show_track(trackdata):
+                x, y = TrackGenerator.visualize_track(trackdata)
+                plt.plot(x, y)
+                plt.axis('scaled')
+                plt.show()
+
         def visualize_track(track_data):
-                x, y=map(list, zip(*track_data))
-                plt.plot(x,y)
-                plt.axis('scaled')
-                plt.show()
-
+                return map(list, zip(*track_data))
+                
         def visualize_cones(conedata):
                 yellow_cones=[x for x in conedata if x[2]=='Y']
                 blue_cones=[x for x in conedata if x[2]=='B']
-                print(blue_cones)
                 yellow_x, yellow_y, _=map(list, zip(*yellow_cones))
                 blue_x, blue_y, _=map(list, zip(*blue_cones))
 
+                return yellow_x, yellow_y, blue_x, blue_y
+                
+        def show_cones(conedata):
+                yellow_x, yellow_y, blue_x, blue_y=TrackGenerator.visualize_cones(conedata)
                 plt.plot(yellow_x,yellow_y,'*',color='orange')
                 plt.plot(blue_x,blue_y,'*',color='blue')
                 plt.axis('scaled')
                 plt.show()
+
 
 
                         
