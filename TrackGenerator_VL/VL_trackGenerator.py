@@ -113,7 +113,7 @@ class TrackGenerator:
                 return not TrackGenerator.intersectsWithSelf(toCheck_track_data) and not doubleStraight
 
         ################################################################
-        #FUNKTIONEN UM TRACKKOMPONENTE HINZUFÜGEN
+        #TRACKELEMENT FUNCTIONS
         ################################################################
         def emptyElement(point_in,
                                 tangent_in,
@@ -288,7 +288,7 @@ class TrackGenerator:
                 return (points_out, normalize_vec(tangent_out), normalize_vec(normal_out))
 
         #####################################
-        #FUNKTIONEN IN PARAMETER FORM 
+        #FUNCTIONS IN PARAMETER FORM
         #####################################
         def de_parameterize(func):
                 """Given a parametric function, turn it into a list of points"""
@@ -466,69 +466,18 @@ class TrackGenerator:
                                 to_return.append((cur_point[0], cur_point[1],"BM"))
                                 all_points_bSide.append(b_side_point)     
                 return to_return
-        def check_if_overlap(points):
-                """
-                Naive check to see if track overlaps itself
 
-                (Won't catch overlaps due to track width, only if track center overlaps)
-                """
-
-                # Remove end points as in theory that should also be the start point
-                # (I remove extra to be a little generous to it as a courtesy)
-                #points = points[:-10]
-                # We want to add in the diagonally-connected points, otherwise you can imagine
-                # that two tracks moving diagonally opposite could cross eachother inbetween the pixels,
-                # fooling our test.
-
-                for index in range(1, len(points)):
-                        (sx, sy) = points[index - 1]
-                        (ex, ey) = points[index]
-                        manhattan_distance = abs(ex - sx) + abs(ey - sy)
-                        if (manhattan_distance > 1):
-                                # moved diagonally, insert an extra point for it at the end!
-                                points.append((sx + 1, sy) if ex > sx else (sx - 1, sy))
-                return len(set(points)) != len(points)
-
-        def onSegment(p, q, r):
-                """
-                Given three collinear points p, q, r, the function checks if point q lies on line segment 'pr'
-                """
-                if ( (q[0] <= max(p[0], r[0])) and (q[0] >= min(p[0], r[0])) and
-                        (q[1] <= max(p[1], r[1])) and (q[1] >= min(p[1], r[1]))):
-                        return True
-                return False
-                
-        def orientation(p, q, r):
-                """
-                to find the orientation of an ordered triplet (p,q,r)
-                function returns the following values:
-                0 : Collinear points
-                1 : Clockwise points
-                2 : Counterclockwise
-                """
-                val = (float(q[1] - p[1]) * (r[0] - q[0])) - (float(q[0] - p[0]) * (r[1] - q[1]))
-                if (val > 0):
-                        # Clockwise orientation
-                        return 1
-                elif (val < 0):
-                        # Counterclockwise orientation
-                        return 2
-                else:  
-                        # Collinear orientation
-                        return 0
-
-
-        def doIntersect(p1,q1,p2,q2):
+        def __doIntersect(p1,q1,p2,q2):
                 """
                 The main function that returns true if
                 the line segment 'p1q1' and 'p2q2' intersect.
                 """
                 # Find the 4 orientations required for
                 # the general and special cases
-                o1 = TrackGenerator.orientation(p1, q1, p2)
-                o2 = TrackGenerator.orientation(p1, q1, q2)
-                o3 = TrackGenerator.orientation(p2, q2, p1)
-                o4 = TrackGenerator.orientation(p2, q2, q1)
+                o1 = orientation(p1, q1, p2)
+                o2 = orientation(p1, q1, q2)
+                o3 = orientation(p2, q2, p1)
+                o4 = orientation(p2, q2, q1)
                 
                 # General case
                 if ((o1 != o2) and (o3 != o4)):
@@ -537,19 +486,19 @@ class TrackGenerator:
                 # Special Cases
                 
                 # p1 , q1 and p2 are collinear and p2 lies on segment p1q1
-                if ((o1 == 0) and TrackGenerator.onSegment(p1, p2, q1)):
+                if ((o1 == 0) and onSegment(p1, p2, q1)):
                         return True
                 
                 # p1 , q1 and q2 are collinear and q2 lies on segment p1q1
-                if ((o2 == 0) and TrackGenerator.onSegment(p1, q2, q1)):
+                if ((o2 == 0) and onSegment(p1, q2, q1)):
                         return True
                 
                 # p2 , q2 and p1 are collinear and p1 lies on segment p2q2
-                if ((o3 == 0) and TrackGenerator.onSegment(p2, p1, q2)):
+                if ((o3 == 0) and onSegment(p2, p1, q2)):
                         return True
                 
                 # p2 , q2 and q1 are collinear and q1 lies on segment p2q2
-                if ((o4 == 0) and TrackGenerator.onSegment(p2, q1, q2)):
+                if ((o4 == 0) and onSegment(p2, q1, q2)):
                         return True
                 
                 # If none of the cases
@@ -571,7 +520,7 @@ class TrackGenerator:
                                 p4 = points[j+1]
 
                                 if i != j-1 and i != j and i != j+1:
-                                        if TrackGenerator.doIntersect(p1,p2, p3,p4): 
+                                        if TrackGenerator.__doIntersect(p1,p2, p3,p4): 
                                                 print(str(i), " ", str(j))
                                                 return True 
                                         else:

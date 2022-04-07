@@ -78,4 +78,33 @@ def calculate_tangent_vector(xys):
         angle = calculate_tangent_angle(xys)
         return (np.cos(angle), np.sin(angle))
 
+def orientation(p, q, r):
+        """
+        to find the orientation of an ordered triplet (p,q,r)
+        function returns the following values:
+        0 : Collinear points
+        1 : Clockwise points
+        2 : Counterclockwise
+        """
+        val = (float(q[1] - p[1]) * (r[0] - q[0])) - (float(q[0] - p[0]) * (r[1] - q[1]))
+        if (val > 0):
+                # Clockwise orientation
+                return 1
+        elif (val < 0):
+                # Counterclockwise orientation
+                return 2
+        else:  
+                # Collinear orientation
+                return 0
+def onSegment(p, q, r):
+        """
+        Given three collinear points p, q, r, the function checks if point q lies on line segment 'pr'
+        """
+        if ( (q[0] <= max(p[0], r[0])) and (q[0] >= min(p[0], r[0])) and
+                (q[1] <= max(p[1], r[1])) and (q[1] >= min(p[1], r[1]))):
+                return True
+        return False
+                
+
+
 
