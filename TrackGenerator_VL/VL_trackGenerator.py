@@ -458,13 +458,13 @@ class TrackGenerator:
                                 x = (a_side_point[0])
                                 y = (a_side_point[1])
                                 to_return.append((x, y, "Y"))
-                                to_return.append((cur_point[0], cur_point[1],"YM"))
+                                #.append((cur_point[0], cur_point[1],"YM"))
                                 all_points_aSide.append(a_side_point)
                         if (bSide_OK):
                                 x = (b_side_point[0])
                                 y = (b_side_point[1])
                                 to_return.append((x, y, "B"))
-                                to_return.append((cur_point[0], cur_point[1],"BM"))
+                                #to_return.append((cur_point[0], cur_point[1],"BM"))
                                 all_points_bSide.append(b_side_point)     
                 return to_return
 
@@ -528,7 +528,10 @@ class TrackGenerator:
                                                 continue
                 
                 return False
-                
+        
+        #######################################################
+        #VISUALIZE Tracks
+        #######################################################
         def visualize_all(trackdata, conedata):
                 #   sort track data             
                 x, y = TrackGenerator.visualize_track(trackdata)

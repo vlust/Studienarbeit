@@ -1,5 +1,10 @@
 from VL_trackGenerator import *
 import random
+# import matplotlib.pyplot as plt
+import os
+import json
+
+
 # p0=[0,0]
 # p1=[1,0]
 # pn_1=[0,1]
@@ -57,9 +62,38 @@ import random
 # data3, tangent_out3, normal_out3=TrackGenerator.add_constant_turn(data2[-1], tangent_out2,  (normal_out1), param2)
 #data3, tangent_out3, normal_out3=TrackGenerator.add_bezier(data2[-1], p5,(tangent_out2),(tangent_out2), param33)
 
+def cones_to_dict(cones):
+    dict_list=[]
+    keys=['x', 'y', 'color']
+    for cone in cones:
+        dict_list.append(dict(zip(keys, cone)))
+    return dict_list
 
 
-data, cones,_, error=TrackGenerator.generate_randomTrack()
+my_path = os.path.dirname(os.path.abspath(__file__)) # Figures out the absolute path for you in case your working directory moves around.
+
+data, cones, elements, error=TrackGenerator.generate_randomTrack()
 print(f"ERROR {error}")
-TrackGenerator.visualize_all(data,cones)
+#TrackGenerator.visualize_all(data,cones)
+
+
+# Data to be written
+aList = cones_to_dict(cones)
+
+
+track_obj ={
+    "elements" : elements,
+    "key_to_csv" : 1,
+    "cones":aList
+}
+
+# Serializing json 
+json_object = json.dumps(track_obj, indent = 4)
+  
+# Writing to sample.json
+with open(my_path+"/&sample.json", "w") as outfile:
+    outfile.write(json_object)
+
+# with open(my_path+"/&sample.json", "r") as file:
+#     jObj=json.load(file)
 #TrackGenerator.show_track(data)
