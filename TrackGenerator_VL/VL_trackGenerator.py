@@ -75,6 +75,10 @@ class TrackGenerator:
                                 failedCounter += 1
                                 failedElement=True
                                 continue
+                for point in track_data:
+                        point = (round(point[0], 2), round(point[1], 2))
+                track_data=[(round(point[0], 2), round(point[1], 2)) for point in track_data]
+                        
                 conedata=TrackGenerator.get_cones(track_data)
                 return track_data, conedata, elementList, False
 
@@ -86,22 +90,24 @@ class TrackGenerator:
                         newElement=True
 
                 track_element = 0
+                
 
                 finished=False #last track element?
                 if newElement:
-                
                         functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
                         #functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
                         i = choice(range(len(functions)))
                         data_out, tangent_out, normal_out=(functions)[i](point_in, tangent_in, normal_in)
-
+                        track_element = i
                 else:
                         functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn, TrackGenerator.emptyElement]
                         i = choice(range(len(functions)))
                         data_out, tangent_out, normal_out=(functions)[i](point_in, tangent_in, normal_in)
+                        track_element = i
                 if data_out is None:
                         finished=True
                         track_element = i
+                #print(f"element{track_element}")
 
                 return data_out, tangent_out, normal_out, finished, track_element
 
@@ -455,14 +461,14 @@ class TrackGenerator:
 
                         # And when they are OK store points
                         if (aSide_OK):
-                                x = (a_side_point[0])
-                                y = (a_side_point[1])
+                                x = round((a_side_point[0]), 2)
+                                y = round((a_side_point[1]), 2)
                                 to_return.append((x, y, "Y"))
                                 #.append((cur_point[0], cur_point[1],"YM"))
                                 all_points_aSide.append(a_side_point)
                         if (bSide_OK):
-                                x = (b_side_point[0])
-                                y = (b_side_point[1])
+                                x = round((b_side_point[0]), 2)
+                                y = round((b_side_point[1]), 2)
                                 to_return.append((x, y, "B"))
                                 #to_return.append((cur_point[0], cur_point[1],"BM"))
                                 all_points_bSide.append(b_side_point)     
