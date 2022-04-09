@@ -84,7 +84,7 @@ print(f"ERROR {error}")
 # df = pd.DataFrame(cones, columns =['x', 'y', 'color'])
 # df.append(data[0:len(data):5])
 # print(df)
-#TrackGenerator.visualize_all(data,cones)
+TrackGenerator.visualize_all(data,cones)
 
 
 # # Data to be written

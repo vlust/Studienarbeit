@@ -341,8 +341,6 @@ class TrackGenerator:
 
                 
         def get_cones(xys, track_width=None):
-                
-        
                 """ 
                 Takes in a list of points, returns a list of triples dictating x, y position
                 of cone and color  [(x, y, color)].
@@ -471,8 +469,13 @@ class TrackGenerator:
                                 y = round((b_side_point[1]), 2)
                                 to_return.append((x, y, "B"))
                                 #to_return.append((cur_point[0], cur_point[1],"BM"))
-                                all_points_bSide.append(b_side_point)     
+                                all_points_bSide.append(b_side_point)
+                to_return.append()    
                 return to_return
+
+        def add_random_cone(max_x, max_y, n):
+                r_cones=[(uniform(-max_x, max_x), uniform(-max_y, max_y)) for _ in range(n)]
+                return r_cones
 
         def __doIntersect(p1,q1,p2,q2):
                 """
@@ -528,10 +531,8 @@ class TrackGenerator:
 
                                 if i != j-1 and i != j and i != j+1:
                                         if TrackGenerator.__doIntersect(p1,p2, p3,p4): 
-                                                print(str(i), " ", str(j))
+                                                #print(str(i), " ", str(j))
                                                 return True 
-                                        else:
-                                                continue
                 
                 return False
         
