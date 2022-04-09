@@ -18,7 +18,7 @@ def save_csv_allpoints(track, cones, elemets):
         point_l.extend("M")
         track_l.append(point_l)
     df_track =pd.DataFrame(track_l[0::5], columns =['x', 'y', 'color'])
-    df=df.append(df_track)
+    df=pd.concat([df,df_track])
     str_elements=""
     for element in elements:
         str_elements+="_"+str(element)
