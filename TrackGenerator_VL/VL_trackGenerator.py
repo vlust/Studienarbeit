@@ -1,3 +1,4 @@
+from tkinter import FALSE
 import numpy as np
 import matplotlib.pyplot as plt
 from utilities import *
@@ -76,20 +77,25 @@ class TrackGenerator:
                                 failedCounter += 1
                                 failedElement=True
                 
+                track_data=[(round(point[0], 2), round(point[1], 2)) for point in track_data]
+                conedata=TrackGenerator.get_cones(track_data)
+
+                #Maybe add random false element
+                
                 if not np.random.choice([0,1],p=[TrackGenerator.PROPABILITY_RAND_TRACK, 1-TrackGenerator.PROPABILITY_RAND_TRACK]):
                         max_xy=max(max(track_data, key = lambda i : i[0])[0],max(track_data, key = lambda i : i[1])[1], key = abs) # get max xy value 
-                        track_data=TrackGenerator.not_connected_track_element(max_xy,track_data)
-                        
-
+                        false_element, failed =TrackGenerator.not_connected_track_element(max_xy,track_data)
+                        if not failed:
+                                false_cones=TrackGenerator.get_cones(false_element)
+                                conedata.extend(false_cones)
+                  
                 
-                track_data=[(round(point[0], 2), round(point[1], 2)) for point in track_data]
-                        
-                conedata=TrackGenerator.get_cones(track_data)
                 return track_data, conedata, elementList, False
 
         def not_connected_track_element(max_xy, track):
                 # new point anywhere in range of track
                 to_check=[]
+                failed = False
 
                 tangent_in = (1, 0)
                 point_in = (0, 0)
@@ -105,16 +111,20 @@ class TrackGenerator:
                 #beta=MAX_BETA
                 tangent_out=(newTan[0]* np.cos(beta) + newTan[1] *np.sin(beta), -newTan[0]*np.sin(beta) + newTan[1]* np.cos(beta))
                 done=False
+                counter=0
+                rand_track=[]
                 while not done:
+                        if counter == 10:
+                                rand_track = []
+                                failed = True
+                                break
                         rand_track,_,_=TrackGenerator.random_Bezier(point_out,tangent_out, 1)
                         to_check=track.copy()
-                        to_check.extend(rand_track[1:])
-                        done = not TrackGenerator.intersectsWithSelf(track)
-                return to_check
+                        to_check.extend(rand_track)
+                        done = not TrackGenerator.intersectsWithSelf(to_check)
+                        counter+=1
+                return rand_track, failed
 
-
-                
-                print(max_xy)
         def randomElement(point_in, tangent_in, normal_in, newElement=None):
                 """
                 Adds new random Track element (if newElement is TRUE then empty track element is not an option)
@@ -373,16 +383,22 @@ class TrackGenerator:
                 return Parametrization(lambda t: to_return(control_points, t))
 
                 
-        def get_cones(xys, track_width=None):
+        def get_cones(xys, params={} ):
                 """ 
                 Takes in a list of points, returns a list of triples dictating x, y position
                 of cone and color  [(x, y, color)].
                 """
-
-                if track_width is None:
-                        cone_normal_distance = TrackGenerator.TRACK_WIDTH
+                if "track_width" in params:
+                        cone_normal_distance = params["length"]
                 else:
-                        cone_normal_distance = track_width
+                        cone_normal_distance = TrackGenerator.TRACK_WIDTH
+
+                if "false_element" in params:
+                        false_element = params["false_element"]
+                else:
+                        false_element = 1
+
+
 
 
                 # How close can cones be from those on the same side.
@@ -493,13 +509,13 @@ class TrackGenerator:
                         if (aSide_OK):
                                 x = round((a_side_point[0]), 2)
                                 y = round((a_side_point[1]), 2)
-                                to_return.append((x, y, "Y", 1))
+                                to_return.append((x, y, "Y", false_element))
                                 #.append((cur_point[0], cur_point[1],"YM"))
                                 all_points_aSide.append(a_side_point)
                         if (bSide_OK):
                                 x = round((b_side_point[0]), 2)
                                 y = round((b_side_point[1]), 2)
-                                to_return.append((x, y, "B", 1))
+                                to_return.append((x, y, "B", false_element))
                                 #to_return.append((cur_point[0], cur_point[1],"BM"))
                                 all_points_bSide.append(b_side_point)
                 #Add random cones in Frame x_max and y_max
