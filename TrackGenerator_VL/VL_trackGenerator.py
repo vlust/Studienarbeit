@@ -14,7 +14,7 @@ class TrackGenerator:
         MAX_TRACK_LENGTH = 105
         MAX_ELEMENTS = 3
         PROPABILITY_NO_RAND_CONE = 0.6
-        PROPABILITY_RAND_TRACK = 0.2
+        PROPABILITY_RAND_TRACK = 1
 
         ################################################################
         #MAKRO GENERATOR FUNCTIONS
@@ -71,19 +71,50 @@ class TrackGenerator:
                                 tangent_in = tangent_out
                                 normal_in = normal_out
                                 elementCounter += 1
-                                continue
+                                
                         else:
                                 failedCounter += 1
                                 failedElement=True
-                                continue#
+                
                 if not np.random.choice([0,1],p=[TrackGenerator.PROPABILITY_RAND_TRACK, 1-TrackGenerator.PROPABILITY_RAND_TRACK]):
-                        TrackGenerator.not_connected_track_element()
+                        max_xy=max(max(track_data, key = lambda i : i[0])[0],max(track_data, key = lambda i : i[1])[1], key = abs) # get max xy value 
+                        track_data=TrackGenerator.not_connected_track_element(max_xy,track_data)
+                        
 
+                
                 track_data=[(round(point[0], 2), round(point[1], 2)) for point in track_data]
                         
                 conedata=TrackGenerator.get_cones(track_data)
                 return track_data, conedata, elementList, False
 
+        def not_connected_track_element(max_xy, track):
+                # new point anywhere in range of track
+                to_check=[]
+
+                tangent_in = (1, 0)
+                point_in = (0, 0)
+                MAX_ALPHA=deg_to_rad(75)
+                MAX_BETA=-deg_to_rad(60)
+                r=uniform(0.3*max_xy, max_xy)# somwhere on circle around (0,0) with r_max=max_xy
+                #POINT_UT FROM ALPHA
+                alpha=uniform(-MAX_ALPHA,MAX_ALPHA)
+                newTan=(tangent_in[0]* np.cos(alpha) + tangent_in[1] *np.sin(alpha), -tangent_in[0]*np.sin(alpha) + tangent_in[1]* np.cos(alpha))   #direction towards point out
+                point_out= (point_in[0]+newTan[0]*r,point_in[1]+newTan[1]*r)    #move by r
+                #TANGENT_OUT FROM BETA
+                beta=uniform(-MAX_BETA,MAX_BETA)
+                #beta=MAX_BETA
+                tangent_out=(newTan[0]* np.cos(beta) + newTan[1] *np.sin(beta), -newTan[0]*np.sin(beta) + newTan[1]* np.cos(beta))
+                done=False
+                while not done:
+                        rand_track,_,_=TrackGenerator.random_Bezier(point_out,tangent_out, 1)
+                        to_check=track.copy()
+                        to_check.extend(rand_track[1:])
+                        done = not TrackGenerator.intersectsWithSelf(track)
+                return to_check
+
+
+                
+                print(max_xy)
         def randomElement(point_in, tangent_in, normal_in, newElement=None):
                 """
                 Adds new random Track element (if newElement is TRUE then empty track element is not an option)
@@ -112,8 +143,7 @@ class TrackGenerator:
 
                 return data_out, tangent_out, normal_out, finished, track_element
 
-        def not_connected_track_element(max_xy):
-                x = 0
+
 
         def check_if_viable(toCheck_track_data, newElement, lastElement):
                 """
