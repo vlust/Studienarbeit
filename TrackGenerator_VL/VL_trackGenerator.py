@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utilities import *
 from scipy.special import binom
-from random import uniform, choice
+from random import uniform, choice, choices
 
 class TrackGenerator:
         FIDELITY = 50
@@ -13,6 +13,7 @@ class TrackGenerator:
         MAX_CONSTANT_TURN = 45
         MAX_TRACK_LENGTH = 105
         MAX_ELEMENTS = 3
+        PROPABILITY_NO_RAND_CONE = 0.01
 
         ################################################################
         #MAKRO GENERATOR FUNCTIONS
@@ -38,28 +39,27 @@ class TrackGenerator:
                 # exit conditions
                 #error=False
                 failedCounter = 0
-                failedElement = False
+                failedElement = True# initially cant choose empty element
                 finished = False
 
                 #loop for generating track elemnts
                 while finished is False:
                         if failedCounter == 10:
-                                
                                 return None, None, True #Generation failed due to to many tries
+
                         if elementCounter == TrackGenerator.MAX_ELEMENTS:
                                 break #generation finished due to max number of elements
 
                         cur_track_data = []
                         cur_track_data = track_data.copy()
 
-                        if failedElement:
-                                data_out, tangent_out, normal_out, finished, elementType= TrackGenerator.randomElement(point_in, tangent_in, normal_in)
-                        else:
-                                data_out, tangent_out, normal_out, finished, elementType= TrackGenerator.randomElement(point_in, tangent_in, normal_in)
+                        
+                        data_out, tangent_out, normal_out, finished, elementType= TrackGenerator.randomElement(point_in, tangent_in, normal_in, failedElement)
+                        
                         if finished:
                                 break
                         cur_track_data.extend(data_out[1:])
-                        #print(f"TD_len {len(track_data)}")
+
                         if TrackGenerator.check_if_viable(cur_track_data, elementType, elementList[-1]):
                                 failedElement=False
                                 track_data=cur_track_data
@@ -95,7 +95,6 @@ class TrackGenerator:
                 finished=False #last track element?
                 if newElement:
                         functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
-                        #functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
                         i = choice(range(len(functions)))
                         data_out, tangent_out, normal_out=(functions)[i](point_in, tangent_in, normal_in)
                         track_element = i
@@ -107,11 +106,13 @@ class TrackGenerator:
                 if data_out is None:
                         finished=True
                         track_element = i
-                #print(f"element{track_element}")
+
 
                 return data_out, tangent_out, normal_out, finished, track_element
 
-                
+        def not_connected_track_element(max_xy):
+                x = 0
+
         def check_if_viable(toCheck_track_data, newElement, lastElement):
                 """
                 checks if added track element is viable
@@ -223,9 +224,9 @@ class TrackGenerator:
                 beta=uniform(-MAX_BETA,MAX_BETA)
                 #beta=MAX_BETA
                 tangent_out=(newTan[0]* np.cos(beta) + newTan[1] *np.sin(beta), -newTan[0]*np.sin(beta) + newTan[1]* np.cos(beta))
-                      
-
+                
                 return TrackGenerator.add_bezier(point_in, point_out,tangent_in,tangent_out)
+
 
 
 
@@ -350,8 +351,7 @@ class TrackGenerator:
                         cone_normal_distance = TrackGenerator.TRACK_WIDTH
                 else:
                         cone_normal_distance = track_width
-                
-                #print(cone_normal_distance)
+
 
                 # How close can cones be from those on the same side.
                 min_cone_distance_sameSide = 4
@@ -461,21 +461,32 @@ class TrackGenerator:
                         if (aSide_OK):
                                 x = round((a_side_point[0]), 2)
                                 y = round((a_side_point[1]), 2)
-                                to_return.append((x, y, "Y"))
+                                to_return.append((x, y, "Y", 1))
                                 #.append((cur_point[0], cur_point[1],"YM"))
                                 all_points_aSide.append(a_side_point)
                         if (bSide_OK):
                                 x = round((b_side_point[0]), 2)
                                 y = round((b_side_point[1]), 2)
-                                to_return.append((x, y, "B"))
+                                to_return.append((x, y, "B", 1))
                                 #to_return.append((cur_point[0], cur_point[1],"BM"))
                                 all_points_bSide.append(b_side_point)
-                to_return.append()    
+                #Add random cones in Frame x_max and y_max
+                xlist, ylist, _ , _= zip(*to_return)
+                max_x = max(xlist)
+                max_y = max(ylist)
+                min_x = min(xlist)
+                min_y = min(ylist)
+                p=TrackGenerator.PROPABILITY_NO_RAND_CONE
+                rand_cones=TrackGenerator.add_random_cone(max_x, max_y, min_x, min_y, choices([0,1,2,3], weights=(p*100, (100-p*100)*0.75, (100-p*100)*0.2, (100-p*100)*0.05)))
+                
+
+                to_return.extend(rand_cones)
                 return to_return
 
-        def add_random_cone(max_x, max_y, n):
-                r_cones=[(uniform(-max_x, max_x), uniform(-max_y, max_y)) for _ in range(n)]
+        def add_random_cone(max_x,  max_y, min_x, min_y, n):
+                r_cones=[(uniform(min_x*1.2, max_x*1.2), uniform(min_y*1.2, max_y*1.2), choice(['B','Y']), 0) for _ in range(n[0])]
                 return r_cones
+                 
 
         def __doIntersect(p1,q1,p2,q2):
                 """
@@ -517,7 +528,6 @@ class TrackGenerator:
         def intersectsWithSelf(curvePoints):
                 points = curvePoints
                 x=False
-                #print(len(points))
                 for i in range(len(points) - 1):
 
                         #Point pair 1
@@ -531,7 +541,7 @@ class TrackGenerator:
 
                                 if i != j-1 and i != j and i != j+1:
                                         if TrackGenerator.__doIntersect(p1,p2, p3,p4): 
-                                                #print(str(i), " ", str(j))
+
                                                 return True 
                 
                 return False
@@ -561,10 +571,10 @@ class TrackGenerator:
                 return map(list, zip(*track_data))
                 
         def visualize_cones(conedata):
-                yellow_cones=[x for x in conedata if x[2]=='Y']
-                blue_cones=[x for x in conedata if x[2]=='B']
-                yellow_x, yellow_y, _=map(list, zip(*yellow_cones))
-                blue_x, blue_y, _=map(list, zip(*blue_cones))
+                yellow_cones = [x for x in conedata if x[2]=='Y']
+                blue_cones = [x for x in conedata if x[2]=='B']
+                yellow_x, yellow_y, _, _ = map(list, zip(*yellow_cones))
+                blue_x, blue_y, _, _ = map(list, zip(*blue_cones))
 
                 return yellow_x, yellow_y, blue_x, blue_y
                 

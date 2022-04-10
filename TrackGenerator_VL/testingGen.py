@@ -84,6 +84,8 @@ print(f"ERROR {error}")
 # df = pd.DataFrame(cones, columns =['x', 'y', 'color'])
 # df.append(data[0:len(data):5])
 # print(df)
+#print(cones)
+print(f"ELEMENTS {elements}")
 TrackGenerator.visualize_all(data,cones)
 
 
