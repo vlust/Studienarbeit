@@ -80,7 +80,7 @@ print(f"ERROR {error}")
 #     point_l=list(point)
 #     point_l.extend('M')
 #     track.append(point_l)
-# print(track)
+
 # df = pd.DataFrame(cones, columns =['x', 'y', 'color'])
 # df.append(data[0:len(data):5])
 # print(df)

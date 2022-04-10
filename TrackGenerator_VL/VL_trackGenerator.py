@@ -13,7 +13,8 @@ class TrackGenerator:
         MAX_CONSTANT_TURN = 45
         MAX_TRACK_LENGTH = 105
         MAX_ELEMENTS = 3
-        PROPABILITY_NO_RAND_CONE = 0.01
+        PROPABILITY_NO_RAND_CONE = 0.6
+        PROPABILITY_RAND_TRACK = 0.2
 
         ################################################################
         #MAKRO GENERATOR FUNCTIONS
@@ -74,9 +75,10 @@ class TrackGenerator:
                         else:
                                 failedCounter += 1
                                 failedElement=True
-                                continue
-                for point in track_data:
-                        point = (round(point[0], 2), round(point[1], 2))
+                                continue#
+                if not np.random.choice([0,1],p=[TrackGenerator.PROPABILITY_RAND_TRACK, 1-TrackGenerator.PROPABILITY_RAND_TRACK]):
+                        TrackGenerator.not_connected_track_element()
+
                 track_data=[(round(point[0], 2), round(point[1], 2)) for point in track_data]
                         
                 conedata=TrackGenerator.get_cones(track_data)
@@ -630,108 +632,3 @@ class Parametrization:
                                         i += 1
                 return Parametrization(composite)
 
-
-
-# p0=[0,0]
-# p1=[0,30]
-# pn_1=[30,0]
-# pn=[30,30]
-# control_points = [p0, p1, pn_1, pn]
-
-# p2=[0,0]
-# p3=[0,1]
-# pn_3=[1,0]
-# pn=[30,30]
-
-# d=1
-
-# ######################## DATA ############################
-# #data=list(TrackGenerator.de_parameterize(TrackGenerator.parametric_bezier(control_points)))
-# data, _, _, _=TrackGenerator.add_constant_turn(p0, p3, pn_3)
-# #data=list(TrackGenerator.de_parameterize(TrackGenerator.parametric_circle([0,0],[0,d*20],d*np.pi/2)))
-# #data=list(TrackGenerator.de_parameterize(TrackGenerator.parametric_straight([1,0],[0,0],50)))
-
-# TrackGenerator.visualize(data)
-
-
-        # def orient_constant_turn(point_in,
-        #                     point_out,
-        #                     tangent_in,
-        #                     tangent_out,
-        #                     normal_in):
-        #         xys = []
-        #         """
-        #         Complicated connector function that attempts to abide by contest regulations.
-
-        #         Warning: Sometimes the circles are not of allowed radius!
-        #         """
-
-        #         total_length = 0
-        #         final_tangent_out = tangent_out
-        #         tangent_out = scale_vector(tangent_out, -1)
-
-        #         # We need to calculate the turn angle (angle between 2 vectors):
-        #         outer_turn_angle = np.arccos(
-        #                 - tangent_in[0] * tangent_out[0] - tangent_in[1] * tangent_out[1]
-        #         )
-        #         circle_turn_angle = np.pi - outer_turn_angle
-        #         circle_turn_percent = circle_turn_angle / (2 * np.pi)
-        #         circle_radius = uniform(
-        #                 TrackGenerator.MIN_CONSTANT_TURN,
-        #                 TrackGenerator.MAX_CONSTANT_TURN
-        #         )
-
-        #         # Now we draw this circle:
-        #         (points_out, tangent_out, normal_out, added_length) = TrackGenerator.add_constant_turn(
-        #                 point_in,
-        #                 tangent_in,
-        #                 normal_in,
-        #                 params={
-        #                         "turn_against_normal": False,
-        #                         "circle_percent":      circle_turn_percent,
-        #                         "radius":              circle_radius
-        #                 }
-        #         )
-        #         total_length += added_length
-        #         xys.extend(points_out)
-
-        #         # And now we add a half-turn to point us directly back to the start.
-        #         # Radius is calculated by finding distance when projected along the normal
-        #         tangent_in = tangent_out
-        #         normal_in = normal_out
-        #         point_in = points_out[-1]
-        #         tangent_out = final_tangent_out
-        #         diff = subtract_vectors(point_in, point_out)
-        #         circle_radius = (diff[0] * normal_in[0] + diff[1] * normal_in[1])/2
-
-        #         # Now we draw the circle:
-        #         (points_out, tangent_out, normal_out, added_length) = TrackGenerator.add_constant_turn(
-        #                 point_in,
-        #                 tangent_in,
-        #                 normal_in,
-        #                 params={
-        #                         "turn_against_normal": False,
-        #                         "circle_percent":      0.5,
-        #                         "radius":              abs(circle_radius)
-        #                 }
-        #         )
-        #         total_length += added_length
-        #         xys.extend(points_out)
-
-        #         # And then add a straight to connect back to the start
-        #         tangent_in = tangent_out
-        #         normal_in = normal_out
-        #         point_in = points_out[-1]
-        #         straight_length = get_distance(point_in, point_out) * 1.1
-        #         (points_out, tangent_out, normal_out, added_length) = TrackGenerator.add_straight(
-        #                 point_in,
-        #                 tangent_in,
-        #                 normal_in,
-        #                 params={
-        #                         "length": straight_length
-        #                 }
-        #         )
-        #         total_length += added_length
-        #         xys.extend(points_out)
-
-        #         return (xys, tangent_out, normal_out, total_length)
