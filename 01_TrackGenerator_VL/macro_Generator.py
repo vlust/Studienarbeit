@@ -7,7 +7,7 @@ import pandas as pd
 import json
 import os
 
-NUMBER_OF_TRACKS = 10
+NUMBER_OF_TRACKS = 96
 path=os.path.dirname(os.path.abspath(__file__))
 
 def save_csv_allpoints(track, cones, elemets):

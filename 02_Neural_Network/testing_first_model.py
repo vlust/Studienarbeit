@@ -29,8 +29,9 @@ def split_dataframe(df, chunk_size = 4):
 
 
 my_data = np.genfromtxt('01_TrackGenerator_VL/tracks/ALL.csv', delimiter=',', encoding="utf8",skip_header=1)
-
-data_x_y = np.hsplit(my_data, [3,4])
+data_x_y=my_data/200
+print(data_x_y)
+data_x_y = np.hsplit(data_x_y, [3,4])
 data_x=data_x_y[0]
 data_y=data_x_y[1]
 data_y*=200
@@ -45,8 +46,8 @@ newlabels=[np.concatenate(a) for a in data_y_split]
 
 data_fatures=tf.convert_to_tensor(data_x_split)
 data_labels=tf.convert_to_tensor(newlabels)
-#print(data_labels)
-#print(data_fatures)
+print(data_labels)
+print(data_fatures)
 
 
 
@@ -75,10 +76,12 @@ data_labels=tf.convert_to_tensor(newlabels)
 #     plt.grid(False)
 #     plt.imshow(train_images[i], cmap=plt.cm.binary)
 #     plt.xlabel(class_names[train_labels[i]])
-# plt.show()
+# # plt.show()
 
 model = tf.keras.Sequential([
     tf.keras.layers.Flatten(input_shape=(80, 3)),
+    tf.keras.layers.Dense(1000, activation='relu'),
+    tf.keras.layers.Dense(240, activation='relu'),
     tf.keras.layers.Dense(128, activation='relu'),
     tf.keras.layers.Dense(80, activation='sigmoid')
 ])
@@ -89,9 +92,9 @@ model = tf.keras.Sequential([
 model.compile(optimizer='adam',
               loss=tf.keras.losses.BinaryCrossentropy(
     from_logits=False,),
-              metrics=['accuracy'])
+              metrics=['categorical_accuracy'])
 
-model.fit(data_fatures, data_labels, epochs=10)
+model.fit(data_fatures, data_labels, epochs=100)
 
 test_loss, test_acc = model.evaluate(data_fatures,  data_labels, verbose=2)
 
