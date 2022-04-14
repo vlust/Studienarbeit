@@ -29,9 +29,10 @@ def save_csv_allpoints(track, cones, elemets):
 def save_csv(cones):
     df = pd.DataFrame(cones, columns =['x', 'y', 'color', 'target'])
     df_padded=df.reindex(range(80), fill_value=0)
-    df1=df_padded[:100]
+    df_cut=df_padded[:80]
     filename=f"/tracks/ALL.csv"
-    df1.to_csv(path+filename, mode='a', index=False, header=False)
+    df_cut.to_csv(path+filename, mode='a', index=False, header=False)
+    
 
 def savefig(track, cones):
     x, y = TrackGenerator.visualize_track(track)
@@ -49,6 +50,7 @@ for i in range (NUMBER_OF_TRACKS):
     track, cones, elements, error=TrackGenerator.generate_randomTrack()
     if not error:
         save_csv(cones)
+        print(f"track added {i}")
         # save_csv_allpoints(track, cones, elements)
         # savefig(track, cones)
     else:

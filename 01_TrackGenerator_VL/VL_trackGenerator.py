@@ -508,13 +508,13 @@ class TrackGenerator:
                         if (aSide_OK):
                                 x = round((a_side_point[0]), 2)
                                 y = round((a_side_point[1]), 2)
-                                to_return.append((x, y, "Y", false_element))
+                                to_return.append((x, y, 1, false_element))
                                 #.append((cur_point[0], cur_point[1],"YM"))
                                 all_points_aSide.append(a_side_point)
                         if (bSide_OK):
                                 x = round((b_side_point[0]), 2)
                                 y = round((b_side_point[1]), 2)
-                                to_return.append((x, y, "B", false_element))
+                                to_return.append((x, y, 2, false_element))
                                 #to_return.append((cur_point[0], cur_point[1],"BM"))
                                 all_points_bSide.append(b_side_point)
                 #Add random cones in Frame x_max and y_max
@@ -531,7 +531,8 @@ class TrackGenerator:
                 return to_return
 
         def add_random_cone(max_x,  max_y, min_x, min_y, n):
-                r_cones=[(uniform(min_x*1.2, max_x*1.2), uniform(min_y*1.2, max_y*1.2), choice(['B','Y']), 0) for _ in range(n[0])]
+                r_cones=[(uniform(min_x*1.2, max_x*1.2), uniform(min_y*1.2, max_y*1.2), choice([2,1]), 0) for _ in range(n[0])]
+                r_cones=[(round(point[0], 2), round(point[1], 2),point[2],point[3]) for point in r_cones]
                 return r_cones
                  
 
@@ -618,8 +619,8 @@ class TrackGenerator:
                 return map(list, zip(*track_data))
                 
         def visualize_cones(conedata):
-                yellow_cones = [x for x in conedata if x[2]=='Y']
-                blue_cones = [x for x in conedata if x[2]=='B']
+                yellow_cones = [x for x in conedata if x[2]==1]
+                blue_cones = [x for x in conedata if x[2]==2]
                 yellow_x, yellow_y, _, _ = map(list, zip(*yellow_cones))
                 blue_x, blue_y, _, _ = map(list, zip(*blue_cones))
 

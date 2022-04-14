@@ -16,9 +16,8 @@ def split_dataframe(df, chunk_size = 4):
     return chunks
 
 
-df = pd.read_csv('02_Neural_Network/data.csv')
-df1=df[:5]
-print(df1)
+#df = pd.read_csv('02_Neural_Network/data.csv')
+
 
 # #print(df.to_string()) 
 # newdf=split_dataframe(df)
@@ -29,11 +28,20 @@ print(df1)
 
 
 
-#my_data = np.genfromtxt('02_Neural_Network/data.csv', delimiter=',', encoding="utf8",skip_header=1)
-# newdata = [my_data[x:x+2] for x in range(0, len(my_data), 2)]
-
-# data=tf.convert_to_tensor(newdata)
-# print(data)
+my_data = np.genfromtxt('01_TrackGenerator_VL/tracks/ALL.csv', delimiter=',', encoding="utf8",skip_header=1)
+my_data = my_data / 200
+#
+data_x_y = np.hsplit(my_data, [3,4])
+data_x=data_x_y[0]
+data_y=data_x_y[1]
+#print(data_x_y)
+# print((data_x.shape))
+# print(data_y.shape)
+data_x_split = [data_x[x:x+80] for x in range(0, len(data_x), 80)]
+data_y_split = [data_y[x:x+80] for x in range(0, len(data_y), 80)]
+data_fatures=tf.convert_to_tensor(data_x_split)
+data_labels=tf.convert_to_tensor(data_y_split)
+#print(data_fatures)
 
 
 
@@ -64,18 +72,21 @@ print(df1)
 # #     plt.xlabel(class_names[train_labels[i]])
 # # plt.show()
 
-# model = tf.keras.Sequential([
-#     tf.keras.layers.Flatten(input_shape=(28, 28)),
-#     tf.keras.layers.Dense(128, activation='relu'),
-#     tf.keras.layers.Dense(10)
-# ])
+model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=(80, 3)),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(80, activation='sigmoid')
+])
 
-# model.compile(optimizer='adam',
-#               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-#               metrics=['accuracy'])
 
-# model.fit(train_images, train_labels, epochs=10)
 
-# test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
 
-# print('\nTest accuracy:', test_acc)
+model.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
+
+model.fit(data_fatures, data_labels, epochs=10)
+
+test_loss, test_acc = model.evaluate(data_fatures,  data_labels, verbose=2)
+
+print('\nTest accuracy:', test_acc)
