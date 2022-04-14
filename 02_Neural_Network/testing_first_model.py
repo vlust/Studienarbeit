@@ -29,18 +29,23 @@ def split_dataframe(df, chunk_size = 4):
 
 
 my_data = np.genfromtxt('01_TrackGenerator_VL/tracks/ALL.csv', delimiter=',', encoding="utf8",skip_header=1)
-my_data = my_data / 200
-#
+
 data_x_y = np.hsplit(my_data, [3,4])
 data_x=data_x_y[0]
 data_y=data_x_y[1]
-#print(data_x_y)
+data_y*=200
+#print(data_y)
 # print((data_x.shape))
 # print(data_y.shape)
 data_x_split = [data_x[x:x+80] for x in range(0, len(data_x), 80)]
 data_y_split = [data_y[x:x+80] for x in range(0, len(data_y), 80)]
+
+newlabels=[np.concatenate(a) for a in data_y_split]
+
+
 data_fatures=tf.convert_to_tensor(data_x_split)
-data_labels=tf.convert_to_tensor(data_y_split)
+data_labels=tf.convert_to_tensor(newlabels)
+#print(data_labels)
 #print(data_fatures)
 
 
@@ -62,15 +67,15 @@ data_labels=tf.convert_to_tensor(data_y_split)
 
 # test_images = test_images / 255.0
 
-# # plt.figure(figsize=(10,10))
-# # for i in range(25):
-# #     plt.subplot(5,5,i+1)
-# #     plt.xticks([])
-# #     plt.yticks([])
-# #     plt.grid(False)
-# #     plt.imshow(train_images[i], cmap=plt.cm.binary)
-# #     plt.xlabel(class_names[train_labels[i]])
-# # plt.show()
+# plt.figure(figsize=(10,10))
+# for i in range(25):
+#     plt.subplot(5,5,i+1)
+#     plt.xticks([])
+#     plt.yticks([])
+#     plt.grid(False)
+#     plt.imshow(train_images[i], cmap=plt.cm.binary)
+#     plt.xlabel(class_names[train_labels[i]])
+# plt.show()
 
 model = tf.keras.Sequential([
     tf.keras.layers.Flatten(input_shape=(80, 3)),
@@ -82,7 +87,8 @@ model = tf.keras.Sequential([
 
 
 model.compile(optimizer='adam',
-              loss='binary_crossentropy',
+              loss=tf.keras.losses.BinaryCrossentropy(
+    from_logits=False,),
               metrics=['accuracy'])
 
 model.fit(data_fatures, data_labels, epochs=10)
