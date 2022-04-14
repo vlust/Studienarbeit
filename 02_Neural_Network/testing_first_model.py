@@ -15,10 +15,11 @@ def split_dataframe(df, chunk_size = 4):
         chunks.append(df[i*chunk_size:(i+1)*chunk_size])
     return chunks
 
-my_data = np.genfromtxt('02_Neural_Network/data.csv', delimiter=',', encoding="utf8",skip_header=1)
 
+df = pd.read_csv('02_Neural_Network/data.csv')
+df1=df[:5]
+print(df1)
 
-#df = pd.read_csv('02_Neural_Network/data.csv')
 # #print(df.to_string()) 
 # newdf=split_dataframe(df)
 
@@ -26,10 +27,16 @@ my_data = np.genfromtxt('02_Neural_Network/data.csv', delimiter=',', encoding="u
 #dataf=([[[1,2,3,4],[1,2,3,4]],[[1,2,3,4],[1,2,3,4]]])
 #newdata=np.split(my_data, [1,3])
 
-newdata = [my_data[x:x+2] for x in range(0, len(my_data), 2)]
-#
-data=tf.convert_to_tensor(newdata)
-print(data)
+
+
+#my_data = np.genfromtxt('02_Neural_Network/data.csv', delimiter=',', encoding="utf8",skip_header=1)
+# newdata = [my_data[x:x+2] for x in range(0, len(my_data), 2)]
+
+# data=tf.convert_to_tensor(newdata)
+# print(data)
+
+
+
 # fashion_mnist = tf.keras.datasets.fashion_mnist
 
 # (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()

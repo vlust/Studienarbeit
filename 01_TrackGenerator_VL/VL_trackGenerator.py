@@ -81,12 +81,11 @@ class TrackGenerator:
                 conedata=TrackGenerator.get_cones(track_data)
 
                 #Maybe add random false element
-                
                 if not np.random.choice([0,1],p=[TrackGenerator.PROPABILITY_RAND_TRACK, 1-TrackGenerator.PROPABILITY_RAND_TRACK]):
                         max_xy=max(max(track_data, key = lambda i : i[0])[0],max(track_data, key = lambda i : i[1])[1], key = abs) # get max xy value 
                         false_element, failed =TrackGenerator.not_connected_track_element(max_xy,track_data)
                         if not failed:
-                                false_cones=TrackGenerator.get_cones(false_element)
+                                false_cones=TrackGenerator.get_cones(false_element, {"false_element": 0})
                                 conedata.extend(false_cones)
                   
                 

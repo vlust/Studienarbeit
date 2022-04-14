@@ -11,7 +11,7 @@ NUMBER_OF_TRACKS = 10
 path=os.path.dirname(os.path.abspath(__file__))
 
 def save_csv_allpoints(track, cones, elemets):
-    df = pd.DataFrame(cones, columns =['x', 'y', 'color'])
+    df = pd.DataFrame(cones, columns =['x', 'y', 'color', 'target'])
     track_l=[]
     for point in track:
         point_l=list(point)
@@ -25,6 +25,13 @@ def save_csv_allpoints(track, cones, elemets):
 
     filename=f"/tracks/track#{i}_elements"+str_elements+".csv"
     df.to_csv(path+filename, encoding='utf-8', index=False)
+
+def save_csv(cones):
+    df = pd.DataFrame(cones, columns =['x', 'y', 'color', 'target'])
+    df_padded=df.reindex(range(80), fill_value=0)
+    df1=df_padded[:100]
+    filename=f"/tracks/ALL.csv"
+    df1.to_csv(path+filename, mode='a', index=False, header=False)
 
 def savefig(track, cones):
     x, y = TrackGenerator.visualize_track(track)
@@ -41,8 +48,9 @@ def savefig(track, cones):
 for i in range (NUMBER_OF_TRACKS):
     track, cones, elements, error=TrackGenerator.generate_randomTrack()
     if not error:
-        save_csv_allpoints(track, cones, elements)
-        savefig(track, cones)
+        save_csv(cones)
+        # save_csv_allpoints(track, cones, elements)
+        # savefig(track, cones)
     else:
         print("track failed")
 
