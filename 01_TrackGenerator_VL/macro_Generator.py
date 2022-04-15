@@ -6,53 +6,86 @@ from VL_trackGenerator import *
 import pandas as pd
 import json
 import os
+import time
+import functools
+from multiprocessing import Pool
 
-NUMBER_OF_TRACKS = 96
+
+NUMBER_OF_TRACKS = 10000
+NUMBER_OF_BATCHES = 10
 path=os.path.dirname(os.path.abspath(__file__))
 
-def save_csv_allpoints(track, cones, elemets):
-    df = pd.DataFrame(cones, columns =['x', 'y', 'color', 'target'])
-    track_l=[]
-    for point in track:
-        point_l=list(point)
-        point_l.extend("M")
-        track_l.append(point_l)
-    df_track =pd.DataFrame(track_l[0::5], columns =['x', 'y', 'color'])
-    df=pd.concat([df,df_track])
-    str_elements=""
-    for element in elements:
-        str_elements+="_"+str(element)
+#df_all = pd.DataFrame(columns =['x', 'y', 'color', 'target'])
 
-    filename=f"/tracks/track#{i}_elements"+str_elements+".csv"
-    df.to_csv(path+filename, encoding='utf-8', index=False)
+# def save_csv_allpoints(track, cones, elements, i):
+#     df = pd.DataFrame(cones, columns =['x', 'y', 'color', 'target'])
+#     track_l=[]
+#     for point in track:
+#         point_l=list(point)
+#         point_l.extend("M")
+#         track_l.append(point_l)
+#     df_track =pd.DataFrame(track_l[0::5], columns =['x', 'y', 'color'])
+#     df=pd.concat([df,df_track])
+#     str_elements=""
+#     for element in elements:
+#         str_elements+="_"+str(element)
 
-def save_csv(cones):
+#     filename=f"/tracks/track#{i}_elements"+str_elements+".csv"
+#     df.to_csv(path+filename, encoding='utf-8', index=False)
+
+def save_csv(cones, filenumber):
     df = pd.DataFrame(cones, columns =['x', 'y', 'color', 'target'])
     df_padded=df.reindex(range(80), fill_value=0)
     df_cut=df_padded[:80]
-    filename=f"/tracks/ALL.csv"
+    # df_all.append(df_cut)
+    # print(df_all.shape)
+    filename=f"/tracks/tracks_batch#{filenumber}.csv"
     df_cut.to_csv(path+filename, mode='a', index=False, header=False)
     
 
-def savefig(track, cones):
-    x, y = TrackGenerator.visualize_track(track)
-    yellow_x, yellow_y, blue_x, blue_y=TrackGenerator.visualize_cones(cones)
-    plt.plot(x, y)
-    plt.plot(yellow_x,yellow_y,'*',color='orange')
-    plt.plot(blue_x,blue_y,'*',color='blue')
-    plt.axis('scaled')
-    filename=f"/tracks/track#{i}.png"
-    plt.savefig(path+filename)
-    plt.clf()
-    print(f"Fig_{i} done")
+# def savefig(track, cones, i):
+#     x, y = TrackGenerator.visualize_track(track)
+#     yellow_x, yellow_y, blue_x, blue_y=TrackGenerator.visualize_cones(cones)
+#     plt.plot(x, y)
+#     plt.plot(yellow_x,yellow_y,'*',color='orange')
+#     plt.plot(blue_x,blue_y,'*',color='blue')
+#     plt.axis('scaled')
+#     filename=f"/tracks/track#{i}.png"
+#     plt.savefig(path+filename)
+#     plt.clf()
+#     print(f"Fig_{i} done")
 
-for i in range (NUMBER_OF_TRACKS):
-    track, cones, elements, error=TrackGenerator.generate_randomTrack()
-    if not error:
-        save_csv(cones)
-        print(f"track added {i}")
-        # save_csv_allpoints(track, cones, elements)
-        # savefig(track, cones)
-    else:
-        print("track failed")
+def macro_track_to_csv(filenumber):
+    header = pd.DataFrame( columns=['x','y','color','target'])
+    filename=f"/tracks/tracks_batch#{filenumber}.csv"
+    header.to_csv(path+filename,index=False)
+    counter=0
+    for i in range (NUMBER_OF_TRACKS):
+            
+        #t0 = time.time()
+        _, cones, _, error=TrackGenerator.generate_randomTrack()
+        counter+=1
+        if not error:
+            
+            save_csv(cones, filenumber)
+            if counter == 100:
+                print(f"*********************** track for file #{filenumber} added {i} *******************************")
+                counter=0
+            
+            # save_csv_allpoints(track, cones, elements, i)
+            # savefig(track, cones, i)
+        #else:
+            #print("*********************** track failed **********************************************************")
 
+        #t1 = time.time()
+        #print(f"time: {t1-t0}\n")
+
+
+if __name__ == '__main__':
+    list_ranges = list(range(NUMBER_OF_BATCHES))
+    t0 = time.time()
+    pool = Pool(processes=len(list_ranges))
+    pool.map(macro_track_to_csv, list_ranges)
+    t1 = time.time()
+    print(f"time: {t1-t0}\n")
+    #macro_track_to_csv(1)
