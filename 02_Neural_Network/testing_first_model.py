@@ -46,8 +46,8 @@ newlabels=[np.concatenate(a) for a in data_y_split]
 
 data_fatures=tf.convert_to_tensor(data_x_split)
 data_labels=tf.convert_to_tensor(newlabels)
-print(data_labels)
-print(data_fatures)
+# print(data_labels)
+# print(data_fatures)
 
 
 
@@ -80,21 +80,23 @@ print(data_fatures)
 
 model = tf.keras.Sequential([
     tf.keras.layers.Flatten(input_shape=(80, 3)),
-    tf.keras.layers.Dense(1000, activation='relu'),
-    tf.keras.layers.Dense(240, activation='relu'),
-    tf.keras.layers.Dense(128, activation='relu'),
+    #tf.keras.layers.Dense(512, activation='relu'),
+    
+    tf.keras.layers.Dense(256, activation='elu'),
+    tf.keras.layers.Dropout(rate=0.5),
+    tf.keras.layers.Dense(128, activation='elu'),
     tf.keras.layers.Dense(80, activation='sigmoid')
 ])
 
+opt = tf.keras.optimizers.RMSprop(learning_rate=0.00005)
 
 
-
-model.compile(optimizer='adam',
+model.compile(optimizer=opt,
               loss=tf.keras.losses.BinaryCrossentropy(
     from_logits=False,),
               metrics=['categorical_accuracy'])
 
-model.fit(data_fatures, data_labels, epochs=100)
+model.fit(data_fatures, data_labels, batch_size=12, epochs=100)
 
 test_loss, test_acc = model.evaluate(data_fatures,  data_labels, verbose=2)
 

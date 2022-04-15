@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from utilities import *
 from scipy.special import binom
 from random import uniform, choice, choices
+import time
 
 class TrackGenerator:
         FIDELITY = 50
@@ -15,7 +16,7 @@ class TrackGenerator:
         MAX_TRACK_LENGTH = 105
         MAX_ELEMENTS = 3
         PROPABILITY_NO_RAND_CONE = 0.6
-        PROPABILITY_RAND_TRACK = 1
+        PROPABILITY_RAND_TRACK = 0.5
 
         ################################################################
         #MAKRO GENERATOR FUNCTIONS
@@ -25,6 +26,7 @@ class TrackGenerator:
                 """
                 generates random track with max amount of TrackGenerator.MAX_ELEMENTS track elements
                 """
+                #t_start = time.time()
                 #Starting position
                 point_in = [0,0]
                 tangent_in = [1,0]
@@ -43,25 +45,27 @@ class TrackGenerator:
                 failedCounter = 0
                 failedElement = True# initially cant choose empty element
                 finished = False
+                #t_before_while=time.time()
 
                 #loop for generating track elemnts
                 while finished is False:
-                        if failedCounter == 10:
-                                return None, None, True #Generation failed due to to many tries
+                        #t0 = time.time()
+                        if failedCounter == 5:
+                                return None, None, None, True #Generation failed due to to many tries
 
                         if elementCounter == TrackGenerator.MAX_ELEMENTS:
                                 break #generation finished due to max number of elements
 
-                        cur_track_data = []
+                        #cur_track_data = []
                         cur_track_data = track_data.copy()
 
-                        
+                        #t1 = time.time()
                         data_out, tangent_out, normal_out, finished, elementType= TrackGenerator.randomElement(point_in, tangent_in, normal_in, failedElement)
                         
                         if finished:
                                 break
                         cur_track_data.extend(data_out[1:])
-
+                        #t2 = time.time()
                         if TrackGenerator.check_if_viable(cur_track_data, elementType, elementList[-1]):
                                 failedElement=False
                                 track_data=cur_track_data
@@ -76,23 +80,38 @@ class TrackGenerator:
                         else:
                                 failedCounter += 1
                                 failedElement=True
-                
+                        # t3 = time.time()
+                        # print(f"d1_loop {t1-t0}, d2_loop {t2-t1}, d3_loop {t3-t2}")
+
+                #t_after_while = time.time()
+
                 track_data=[(round(point[0], 2), round(point[1], 2)) for point in track_data]
                 conedata=TrackGenerator.get_cones(track_data)
 
+                #t_0 = time.time()
+
                 #Maybe add random false element
                 if not np.random.choice([0,1],p=[TrackGenerator.PROPABILITY_RAND_TRACK, 1-TrackGenerator.PROPABILITY_RAND_TRACK]):
+                        #t_1 = time.time()
                         max_xy=max(max(track_data, key = lambda i : i[0])[0],max(track_data, key = lambda i : i[1])[1], key = abs) # get max xy value 
+                        #t_2 = time.time()
                         false_element, failed =TrackGenerator.not_connected_track_element(max_xy,track_data)
+                        #t_3 = time.time()
                         if not failed:
                                 false_cones=TrackGenerator.get_cones(false_element, {"false_element": 0})
                                 conedata.extend(false_cones)
-                  
+                        #t_4 = time.time()
+                        #print(f"d1 {t_1-t_0}, d2 {t_2-t_1}, d3 {t_3-t_2}, d4 {t_4-t_3}")
+
+                #t_after_false_elem = time.time()
+
+                
                 
                 return track_data, conedata, elementList, False
 
         def not_connected_track_element(max_xy, track):
                 # new point anywhere in range of track
+    
                 to_check=[]
                 failed = False
 
@@ -112,16 +131,22 @@ class TrackGenerator:
                 done=False
                 counter=0
                 rand_track=[]
+
+                
+
                 while not done:
-                        if counter == 10:
+                        if counter == 5:
                                 rand_track = []
                                 failed = True
                                 break
+   
                         rand_track,_,_=TrackGenerator.random_Bezier(point_out,tangent_out, 1)
                         to_check=track.copy()
                         to_check.extend(rand_track)
+          
                         done = not TrackGenerator.intersectsWithSelf(to_check)
                         counter+=1
+  
                 return rand_track, failed
 
         def randomElement(point_in, tangent_in, normal_in, newElement=None):
