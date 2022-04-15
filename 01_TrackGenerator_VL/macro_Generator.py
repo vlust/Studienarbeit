@@ -65,12 +65,13 @@ def macro_track_to_csv(filenumber):
         #t0 = time.time()
         _, cones, _, error=TrackGenerator.generate_randomTrack()
         counter+=1
+        if counter == 100:
+                print(f"*********************** track for file #{filenumber} added {i} *******************************")
+                counter=0
         if not error:
             
             save_csv(cones, filenumber)
-            if counter == 100:
-                print(f"*********************** track for file #{filenumber} added {i} *******************************")
-                counter=0
+
             
             # save_csv_allpoints(track, cones, elements, i)
             # savefig(track, cones, i)
@@ -88,4 +89,3 @@ if __name__ == '__main__':
     pool.map(macro_track_to_csv, list_ranges)
     t1 = time.time()
     print(f"time: {t1-t0}\n")
-    #macro_track_to_csv(1)

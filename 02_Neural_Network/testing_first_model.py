@@ -81,9 +81,8 @@ data_labels=tf.convert_to_tensor(newlabels)
 model = tf.keras.Sequential([
     tf.keras.layers.Flatten(input_shape=(80, 3)),
     #tf.keras.layers.Dense(512, activation='relu'),
-    
     tf.keras.layers.Dense(256, activation='elu'),
-    tf.keras.layers.Dropout(rate=0.5),
+    #tf.keras.layers.Dropout(rate=0.5),
     tf.keras.layers.Dense(128, activation='elu'),
     tf.keras.layers.Dense(80, activation='sigmoid')
 ])
@@ -96,7 +95,7 @@ model.compile(optimizer=opt,
     from_logits=False,),
               metrics=['categorical_accuracy'])
 
-model.fit(data_fatures, data_labels, batch_size=12, epochs=100)
+model.fit(data_fatures, data_labels, batch_size=50, epochs=20)
 
 test_loss, test_acc = model.evaluate(data_fatures,  data_labels, verbose=2)
 
