@@ -11,7 +11,7 @@ import functools
 from multiprocessing import Pool
 
 
-NUMBER_OF_TRACKS = 10000
+NUMBER_OF_TRACKS = 4000
 NUMBER_OF_BATCHES = 10
 path=os.path.dirname(os.path.abspath(__file__))
 
