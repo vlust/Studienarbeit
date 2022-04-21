@@ -8,7 +8,7 @@ from kerastuner.engine.hyperparameters import HyperParameters
 import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
-
+import time
 import pandas as pd
 
 def split_dataframe(df, chunk_size = 4): 
@@ -39,7 +39,7 @@ def getData():
     ################################################################
     #TRAIN DATA
     ################################################################
-    n=80
+    n=50
     df = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled/training.csv')
     df['x']=df['x'].div(200)
     df['y']=df['x'].div(200)
@@ -56,8 +56,8 @@ def getData():
     train_fatures=convert_to_tensor(data_x_split_train)
     train_labels=convert_to_tensor(train_labels)
     print("read training data\n")
-    # print(train_labels)
-    # print(train_fatures)
+    print(train_labels)
+    print(train_fatures)
 
     ################################################################
     #TEST DATA
@@ -79,8 +79,8 @@ def getData():
     test_labels=convert_to_tensor(test_labels)
     print("read test data\n")
 
-    # print(test_labels)
-    # print(test_fatures)
+    print(test_labels)
+    print(test_fatures)
     return train_fatures, train_labels, test_fatures,  test_labels
 
 
@@ -89,25 +89,24 @@ train_fatures, train_labels, test_fatures,  test_labels = getData()
 
 def build_model(hp):
     lr_schedule = keras.optimizers.schedules.ExponentialDecay(
-    initial_learning_rate=1e-4,
+    initial_learning_rate=1e-5,
     decay_steps=1000,
     decay_rate=0.9)
 
     model = keras.Sequential()
 
-    model.add(Flatten(input_shape=(80, 3)))
-    Dense(128, activation='elu'),
-    if hp.Boolean("dropout"):
-        model.add(Dropout(rate=0.25))
+    model.add(Flatten(input_shape=(50, 3)))
+    #model.add(Dense(128, activation='elu'))
+    
         #Dropout(rate=0.2),
         # Dense(64, activation='elu'),
         # Dropout(rate=0.2),
-    for i in range(hp.Int('n_layers', 1, 4)):  # adding variation of layers.
-        model.add(Dense(hp.Int(f'conv_{i}_units',
-                                min_value=32,
-                                max_value=256,
-                                step=32)
-    Dense(80, activation='sigmoid')
+    for i in range(hp.Int('layers', 1, 3)):
+        model.add(Dense(units=hp.Int('units_' + str(i), 64, 160, step=32),
+                                        activation=hp.Choice('act_' + str(i), ['relu', 'elu'])))
+    if hp.Boolean("dropout"):
+        model.add(Dropout(rate=0.25))
+    model.add(Dense(50, activation='sigmoid'))
    
 
     opt = keras.optimizers.Adam(learning_rate=lr_schedule)
@@ -119,34 +118,57 @@ def build_model(hp):
                 metrics=['categorical_accuracy'])
     return model
 
-def build_model2():
-    lr_schedule = keras.optimizers.schedules.ExponentialDecay(
-    initial_learning_rate=1e-4,
-    decay_steps=1000,
-    decay_rate=0.9)
+# def build_model2():
+#     lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+#     initial_learning_rate=1e-4,
+#     decay_steps=1000,
+#     decay_rate=0.9)
 
-    model = keras.Sequential([
-        Flatten(input_shape=(80, 3)),
-        LSTM(return_sequences=False, stateful=True),
-        #Dropout(rate=0.2),
-        Dense(64, activation='elu'),
-        Dropout(rate=0.2),
+#     model = keras.Sequential([
+#         Flatten(input_shape=(80, 3)),
+#         LSTM(return_sequences=False, stateful=True),
+#         #Dropout(rate=0.2),
+#         Dense(64, activation='elu'),
+#         Dropout(rate=0.2),
 
-        Dense(80, activation='sigmoid')
-    ])
+#         Dense(80, activation='sigmoid')
+#     ])
 
-    opt = keras.optimizers.Adam(learning_rate=lr_schedule)
+#     opt = keras.optimizers.Adam(learning_rate=lr_schedule)
 
 
-    model.compile(optimizer=opt,
-                loss=keras.losses.BinaryCrossentropy(
-        from_logits=False,),
-                metrics=['categorical_accuracy'])
-    return model
+#     model.compile(optimizer=opt,
+#                 loss=keras.losses.BinaryCrossentropy(
+#         from_logits=False,),
+#                 metrics=['categorical_accuracy'])
+#     return model
 
-model=build_model()
-model.fit(train_fatures, train_labels, batch_size=50, epochs=75)
+# model=build_model()
+# model.fit(train_fatures, train_labels, batch_size=50, epochs=75)
 
-test_loss, test_acc = model.evaluate(test_fatures,  test_labels, verbose=2)
+# test_loss, test_acc = model.evaluate(test_fatures,  test_labels, verbose=2)
 
-print('\nTest accuracy:', test_acc)
+# print('\nTest accuracy:', test_acc)
+
+LOG_DIR = f"{int(time.time())}"
+
+tuner = RandomSearch(
+    build_model,
+    objective='val_accuracy',
+    max_trials=50,  # how many model variations to test?
+    executions_per_trial=1,  # how many trials per variation? (same model could perform differently)
+    directory=LOG_DIR)
+
+tuner.search_space_summary()
+
+tuner.search(x=train_fatures,
+             y=train_labels,
+             verbose=2, # just slapping this here bc jupyter notebook. The console out was getting messy.
+             epochs=100,
+             batch_size=64,
+             #callbacks=[tensorboard],  # if you have callbacks like tensorboard, they go here.
+             validation_data=(test_fatures, test_labels))
+
+
+with open(f"tuner_{int(time.time())}.pkl", "wb") as f:
+    pickle.dump(tuner, f)
