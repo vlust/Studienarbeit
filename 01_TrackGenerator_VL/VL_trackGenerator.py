@@ -14,9 +14,9 @@ class TrackGenerator:
         MIN_CONSTANT_TURN = 10
         MAX_CONSTANT_TURN = 45
         MAX_TRACK_LENGTH = 105
-        MAX_ELEMENTS = 3
-        PROPABILITY_NO_RAND_CONE = 0.6
-        PROPABILITY_RAND_TRACK = 0.5
+        MAX_ELEMENTS = 2
+        PROPABILITY_NO_RAND_CONE = 0.7
+        PROPABILITY_RAND_TRACK = 0.3
 
         ################################################################
         #MAKRO GENERATOR FUNCTIONS

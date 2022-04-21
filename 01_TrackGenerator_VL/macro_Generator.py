@@ -12,8 +12,8 @@ from multiprocessing import Pool
 from random import uniform, choice, choices, randrange
 
 
-NUMBER_OF_TRACKS = 4000
-NUMBER_OF_BATCHES = 10
+NUMBER_OF_TRACKS = 10
+NUMBER_OF_BATCHES = 1
 path=os.path.dirname(os.path.abspath(__file__))
 
 def save_csv_allpoints(track, cones, elements, i):
@@ -32,13 +32,16 @@ def save_csv_allpoints(track, cones, elements, i):
     filename=f"/tracks/track#{i}_elements"+str_elements+".csv"
     df.to_csv(path+filename, encoding='utf-8', index=False)
 
-def save_csv(cones, filenumber):
-    df = pd.DataFrame(cones, columns =['x', 'y', 'color', 'target'])
-    filled_df=fill_df_rand(df)
+def save_csv(cones, filenumber, i):
+    #cones=[x.insert(0, i)  for x in cones]
+    
+    df = pd.DataFrame(cones, columns =[ 'x', 'y', 'color', 'target'])
+    df['no'] = i
+    #filled_df=fill_df_rand(df)
     #filled_df=fill_df_zero(df)
     #TrackGenerator.show_cones(filled_df.values.tolist())
     filename=f"/tracks/temp/tracks_batch#{filenumber}.csv"
-    filled_df.to_csv(path+filename, mode='a', index=False, header=False)
+    df.to_csv(path+filename, mode='a', index=False, header=False)
     
 def fill_df_rand(df):
     for i in range(80-len(df.index)):
@@ -65,7 +68,7 @@ def savefig(track, cones, i):
 
 
 def macro_track_to_csv(filenumber):
-    header = pd.DataFrame( columns=['x','y','color','target'])
+    header = pd.DataFrame(columns=['x','y','color','target', 'no'])
     filename=f"/tracks/temp/tracks_batch#{filenumber}.csv"
     header.to_csv(path+filename,index=False)
     counter = 0
@@ -78,17 +81,17 @@ def macro_track_to_csv(filenumber):
                 counter=0
         if not error:
             
-            save_csv(cones, filenumber)
+            save_csv(cones, filenumber, i)
         #t1 = time.time()
         #print(f"time: {t1-t0}\n")
 
 
-if __name__ == '__main__':
-    list_ranges = list(range(NUMBER_OF_BATCHES))
-    t0 = time.time()
-    pool = Pool(processes=len(list_ranges))
-    pool.map(macro_track_to_csv, list_ranges)
-    t1 = time.time()
-    print(f"time: {t1-t0}\n")
+# if __name__ == '__main__':
+#     list_ranges = list(range(NUMBER_OF_BATCHES))
+#     t0 = time.time()
+#     pool = Pool(processes=len(list_ranges))
+#     pool.map(macro_track_to_csv, list_ranges)
+#     t1 = time.time()
+#     print(f"time: {t1-t0}\n")
 
-#macro_track_to_csv(1)
+macro_track_to_csv(1)
