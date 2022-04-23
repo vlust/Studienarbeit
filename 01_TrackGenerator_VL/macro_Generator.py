@@ -10,10 +10,10 @@ import time
 import functools
 from multiprocessing import Pool
 from random import uniform, choice, choices, randrange
-import pickle
+from sklearn.utils import shuffle
 
 
-NUMBER_OF_TRACKS = 6000
+NUMBER_OF_TRACKS = 4000
 NUMBER_OF_BATCHES = 10
 path=os.path.dirname(os.path.abspath(__file__))
 
