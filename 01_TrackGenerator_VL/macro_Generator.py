@@ -11,9 +11,10 @@ import functools
 from multiprocessing import Pool
 from random import uniform, choice, choices, randrange
 from sklearn.utils import shuffle
+from tqdm import tqdm
 
 
-NUMBER_OF_TRACKS = 4000
+NUMBER_OF_TRACKS = 6000
 NUMBER_OF_BATCHES = 10
 path=os.path.dirname(os.path.abspath(__file__))
 
@@ -34,9 +35,8 @@ def save_csv_allpoints(track, cones, elements, i):
     df.to_csv(path+filename, encoding='utf-8', index=False)
 
 def save_csv(cones, filenumber, i):
-    #cones=[x.insert(0, i)  for x in cones]
-    
     df = pd.DataFrame(cones, columns =[ 'x', 'y', 'color', 'target'])
+    df = shuffle(df)
     #df['no'] = i
     #filled_df=fill_df_rand(df)
     filled_df=fill_df_zero(df)
@@ -48,7 +48,6 @@ def fill_df_rand(df):
     for i in range(50-len(df.index)):
         df=pd.concat([df,df.iloc[[randrange(0,len(df.index))]]])
     df=df[:50]
-    #print(len(df.index))
     return df
   
 def fill_df_zero(df):
@@ -81,11 +80,9 @@ def macro_track_to_csv(filenumber):
                 print(f"*********************** track for file #{filenumber+1} added {i+1} *******************************")
                 counter=0
         if not error:
-            
             save_csv(cones, filenumber, i)
         #t1 = time.time()
         #print(f"time: {t1-t0}\n")
-
 
 if __name__ == '__main__':
     list_ranges = list(range(NUMBER_OF_BATCHES))

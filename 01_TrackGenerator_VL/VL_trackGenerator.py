@@ -17,6 +17,7 @@ class TrackGenerator:
         MAX_ELEMENTS = 2
         PROPABILITY_NO_RAND_CONE = 0.7
         PROPABILITY_RAND_TRACK = 0.3
+        PROPABILITY_EMPTY_TRACK = 0.01
 
         ################################################################
         #MAKRO GENERATOR FUNCTIONS
@@ -46,7 +47,8 @@ class TrackGenerator:
                 failedElement = True# initially cant choose empty element
                 finished = False
                 #t_before_while=time.time()
-
+                if not np.random.choice([0,1],p=[TrackGenerator.PROPABILITY_EMPTY_TRACK, 1-TrackGenerator.PROPABILITY_EMPTY_TRACK]):
+                        return [], [], elementList, False
                 #loop for generating track elemnts
                 while finished is False:
                         #t0 = time.time()
@@ -105,8 +107,6 @@ class TrackGenerator:
 
                 #t_after_false_elem = time.time()
 
-                
-                
                 return track_data, conedata, elementList, False
 
         def not_connected_track_element(max_xy, track):
