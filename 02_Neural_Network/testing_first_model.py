@@ -3,6 +3,7 @@
 from tensorflow import keras, convert_to_tensor
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Activation, Dropout, LSTM
 from kerastuner.tuners import RandomSearch
+import kerastuner as kt
 from kerastuner.engine.hyperparameters import HyperParameters
 # Helper libraries
 import numpy as np
@@ -10,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import pandas as pd
+import pickle
 
 def split_dataframe(df, chunk_size = 4): 
     chunks = list()
@@ -56,8 +58,8 @@ def getData():
     train_fatures=convert_to_tensor(data_x_split_train)
     train_labels=convert_to_tensor(train_labels)
     print("read training data\n")
-    print(train_labels)
-    print(train_fatures)
+    # print(train_labels)
+    # print(train_fatures)
 
     ################################################################
     #TEST DATA
@@ -134,41 +136,63 @@ def build_model(hp):
 #         Dense(80, activation='sigmoid')
 #     ])
 
-#     opt = keras.optimizers.Adam(learning_rate=lr_schedule)
+
+def build_model2():
+    lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate=1e-5,
+    decay_steps=1000,
+    decay_rate=0.9)
+
+    model = keras.Sequential()
+
+    model.add(Flatten(input_shape=(50, 3)))
+    #model.add(Dense(128, activation='elu'))
+    model.add(Dense(96, activation='elu'))
+    model.add(Dense(96, activation='relu'))
+    model.add(Dense(160, activation='elu'))
+        #Dropout(rate=0.2),
+        # Dense(64, activation='elu'),
+        # Dropout(rate=0.2),
+    
+    model.add(Dense(50, activation='sigmoid'))
+   
+
+    opt = keras.optimizers.Adam(learning_rate=lr_schedule)
 
 
-#     model.compile(optimizer=opt,
-#                 loss=keras.losses.BinaryCrossentropy(
-#         from_logits=False,),
-#                 metrics=['categorical_accuracy'])
-#     return model
-
-# model=build_model()
-# model.fit(train_fatures, train_labels, batch_size=50, epochs=75)
-
-# test_loss, test_acc = model.evaluate(test_fatures,  test_labels, verbose=2)
-
-# print('\nTest accuracy:', test_acc)
-
-LOG_DIR = f"{int(time.time())}"
-
-tuner = RandomSearch(
-    build_model,
-    objective='val_accuracy',
-    max_trials=50,  # how many model variations to test?
-    executions_per_trial=1,  # how many trials per variation? (same model could perform differently)
-    directory=LOG_DIR)
-
-tuner.search_space_summary()
-
-tuner.search(x=train_fatures,
-             y=train_labels,
-             verbose=2, # just slapping this here bc jupyter notebook. The console out was getting messy.
-             epochs=100,
-             batch_size=64,
-             #callbacks=[tensorboard],  # if you have callbacks like tensorboard, they go here.
-             validation_data=(test_fatures, test_labels))
+    model.compile(optimizer=opt,
+                loss=keras.losses.BinaryCrossentropy(
+        from_logits=False,),
+                metrics=['categorical_accuracy'])
+    return model
 
 
-with open(f"tuner_{int(time.time())}.pkl", "wb") as f:
-    pickle.dump(tuner, f)
+model=build_model2()
+model.fit(train_fatures, train_labels, batch_size=64, epochs=75)
+
+test_loss, test_acc = model.evaluate(test_fatures,  test_labels, verbose=2)
+
+print('\nTest accuracy:', test_acc)
+
+# LOG_DIR = f"C:/Users/Anwender/Desktop/saved_Tracks/{int(time.time())}"
+
+# tuner = RandomSearch(
+#     build_model,
+#     objective=kt.Objective("categorical_accuracy", direction="max"),
+#     max_trials=200,  # how many model variations to test?
+#     executions_per_trial=1,  # how many trials per variation? (same model could perform differently)
+#     directory=LOG_DIR)
+
+# #tuner.search_space_summary()
+
+# tuner.search(x=train_fatures,
+#              y=train_labels,
+#              verbose=2, # just slapping this here bc jupyter notebook. The console out was getting messy.
+#              epochs=75,
+#              batch_size=64,
+#              #callbacks=[tensorboard],  # if you have callbacks like tensorboard, they go here.
+#              validation_data=(test_fatures, test_labels))
+
+
+# with open(f"tuner_{int(time.time())}.pkl", "wb") as f:
+#     pickle.dump(tuner, f)
