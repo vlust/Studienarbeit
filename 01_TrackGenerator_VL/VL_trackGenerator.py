@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from utilities import *
 from scipy.special import binom
 from random import uniform, choice, choices
+from math import dist
 import time
 
 class TrackGenerator:
@@ -15,9 +16,9 @@ class TrackGenerator:
         MAX_CONSTANT_TURN = 45
         MAX_TRACK_LENGTH = 105
         MAX_ELEMENTS = 2
-        PROPABILITY_NO_RAND_CONE = 0.7
-        PROPABILITY_RAND_TRACK = 0.3
-        PROPABILITY_EMPTY_TRACK = 0.01
+        PROPABILITY_NO_RAND_CONE = 0.6
+        PROPABILITY_RAND_TRACK = 1
+        PROPABILITY_EMPTY_TRACK = 0.00
 
         ################################################################
         #MAKRO GENERATOR FUNCTIONS
@@ -96,6 +97,7 @@ class TrackGenerator:
                 if not np.random.choice([0,1],p=[TrackGenerator.PROPABILITY_RAND_TRACK, 1-TrackGenerator.PROPABILITY_RAND_TRACK]):
                         #t_1 = time.time()
                         max_xy=max(max(track_data, key = lambda i : i[0])[0],max(track_data, key = lambda i : i[1])[1], key = abs) # get max xy value 
+
                         #t_2 = time.time()
                         false_element, failed =TrackGenerator.not_connected_track_element(max_xy,track_data)
                         #t_3 = time.time()
@@ -132,22 +134,24 @@ class TrackGenerator:
                 counter=0
                 rand_track=[]
 
-                
-
                 while not done:
-                        if counter == 5:
+                        if counter == 10:
                                 rand_track = []
                                 failed = True
+                                
                                 break
    
-                        rand_track,_,_=TrackGenerator.random_Bezier(point_out,tangent_out, 1)
+                        rand_track,_,_=TrackGenerator.random_Bezier(point_out,scale_vector(tangent_out, -1), 1)
                         to_check=track.copy()
                         to_check.extend(rand_track)
           
-                        done = not TrackGenerator.intersectsWithSelf(to_check)
+                        #done = not TrackGenerator.intersectsWithSelf(to_check) 
+                        if not (TrackGenerator.check_min_distance(track,rand_track) < 2*TrackGenerator.TRACK_WIDTH) and not TrackGenerator.intersectsWithSelf(to_check):
+                                done = True
                         counter+=1
+                
   
-                return rand_track, failed
+                return rand_track[::-1], failed
 
         def randomElement(point_in, tangent_in, normal_in, newElement=None):
                 """
@@ -614,10 +618,21 @@ class TrackGenerator:
 
                                 if i != j-1 and i != j and i != j+1:
                                         if TrackGenerator.__doIntersect(p1,p2, p3,p4): 
-
                                                 return True 
                 
                 return False
+
+        def check_min_distance(track1, track2):
+                min_dist = 999
+                for j in range(len(track1)):
+                        for i in range(len(track2)):
+                                if dist(track1[j], track2[i])<min_dist:
+                                        min_dist=dist(track1[j], track2[i])
+
+                return min_dist
+
+
+
         
         #######################################################
         #VISUALIZE Tracks

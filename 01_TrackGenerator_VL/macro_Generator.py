@@ -14,7 +14,7 @@ from sklearn.utils import shuffle
 from tqdm import tqdm
 
 
-NUMBER_OF_TRACKS = 6000
+NUMBER_OF_TRACKS = 4000
 NUMBER_OF_BATCHES = 10
 path=os.path.dirname(os.path.abspath(__file__))
 
@@ -36,10 +36,13 @@ def save_csv_allpoints(track, cones, elements, i):
 
 def save_csv(cones, filenumber, i):
     df = pd.DataFrame(cones, columns =[ 'x', 'y', 'color', 'target'])
-    df = shuffle(df)
+    df=df[:50]
+    df_shuffled=df.iloc[np.random.permutation(len(df))]
+    df_shuffled=df_shuffled.reset_index(drop=True)
+
     #df['no'] = i
     #filled_df=fill_df_rand(df)
-    filled_df=fill_df_zero(df)
+    filled_df=fill_df_zero(df_shuffled)
     #TrackGenerator.show_cones(filled_df.values.tolist())
     filename=f"/tracks/temp/tracks_batch#{filenumber}.csv"
     filled_df.to_csv(path+filename, mode='a', index=False, header=False)
@@ -72,12 +75,12 @@ def macro_track_to_csv(filenumber):
     filename=f"/tracks/temp/tracks_batch#{filenumber}.csv"
     header.to_csv(path+filename,index=False)
     counter = 0
-    for i in range (NUMBER_OF_TRACKS):
+    for i in tqdm(range (NUMBER_OF_TRACKS)):
         #t0 = time.time()
         _, cones, _, error=TrackGenerator.generate_randomTrack()
         counter+=1
         if counter == 100:
-                print(f"*********************** track for file #{filenumber+1} added {i+1} *******************************")
+                #print(f"*********************** track for file #{filenumber+1} added {i+1} *******************************")
                 counter=0
         if not error:
             save_csv(cones, filenumber, i)
