@@ -135,10 +135,9 @@ class TrackGenerator:
                 rand_track=[]
 
                 while not done:
-                        if counter == 10:
+                        if counter == 20:
                                 rand_track = []
                                 failed = True
-                                
                                 break
    
                         rand_track,_,_=TrackGenerator.random_Bezier(point_out,scale_vector(tangent_out, -1), 1)

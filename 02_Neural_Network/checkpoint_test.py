@@ -86,9 +86,9 @@ model2=build_model2()
 filepath="C:/Users/Anwender/Desktop/MODEL_1"
 model = keras.models.load_model(filepath)
 filepath2="IMAGE.png"
-plot_model(model2, to_file=filepath2, show_shapes=True, show_layer_names=True)
-test_loss, test_acc = model.evaluate(test_fatures,  test_labels, verbose=2)
+plot_model(model2, to_file=filepath2)
+# test_loss, test_acc = model.evaluate(test_fatures,  test_labels, verbose=2)
 
-print('\nTest accuracy:', test_acc)
+# print('\nTest accuracy:', test_acc)
 
 

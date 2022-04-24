@@ -66,7 +66,7 @@ def getData():
     ################################################################
     #TEST DATA
     ################################################################
-    df_test = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled/test.csv')
+    df_test = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_shuffled/test.csv')
     df_test['x']=df_test['x'].div(200)
     df_test['y']=df_test['x'].div(200)
     df_test['color']=df_test['color'].div(2)
@@ -251,5 +251,5 @@ print('\nTest accuracy:', test_acc)
 
 
 # model2= kt.load_model(tuner, 2)
-model.save('C:/Users/Anwender/Desktop/MODEL_1')
-predictions = model.predict(test_fatures2)
+# model.save('C:/Users/Anwender/Desktop/MODEL_1')
+# predictions = model.predict(test_fatures2)
