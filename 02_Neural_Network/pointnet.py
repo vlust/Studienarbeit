@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 VAL_SPLIT = 0.2
 NUM_SAMPLE_POINTS = 50
 BATCH_SIZE = 32
-EPOCHS = 60
+EPOCHS = 10
 INITIAL_LR = 1e-3
 
 def getData():
@@ -23,22 +23,26 @@ def getData():
     #TRAIN DATA
     ################################################################
     n=50
-    df = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled/training.csv')
+    df = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_shuffled/training.csv')
     df['x']=df['x'].div(200)
     df['y']=df['x'].div(200)
     df['color']=df['color'].div(2)
 
-    data_x_y=df.values
+    data_x_y = df.values
     data_x_y = np.hsplit(data_x_y, [3,4])
-    data_x=data_x_y[0]
-    data_y=data_x_y[1]
+    data_x = data_x_y[0]
+    data_y = data_x_y[1]
+    #print(data_y)
+    data_y_onehot = [[1, 0] if x[0] else [0, 1] for x in data_y]
+    #print(data_y_onehot)
 
     data_x_split_train = [data_x[x:x+n] for x in range(0, len(data_x), n)]
-    data_y_split_train = [data_y[x:x+n] for x in range(0, len(data_y), n)]
-    train_labels=[np.concatenate(a) for a in data_y_split_train]
-    train_fatures=tf.convert_to_tensor(data_x_split_train)
-    train_labels=tf.convert_to_tensor(train_labels)
-    print("read training data\n")
+    data_y_split_train = [data_y_onehot[x:x+n] for x in range(0, len(data_y_onehot), n)]
+
+    #train_labels=[np.concatenate(a) for a in data_y_split_train]
+    train_fatures = tf.convert_to_tensor(data_x_split_train)
+    train_labels = tf.convert_to_tensor(data_y_split_train) 
+    print("read training data...\n")
     # print(train_labels)
     # print(train_fatures)
 
@@ -50,17 +54,19 @@ def getData():
     df_test['y']=df_test['x'].div(200)
     df_test['color']=df_test['color'].div(2)
 
-    data_x_y_test=df_test.values
+    data_x_y_test = df_test.values
     data_x_y_test = np.hsplit(data_x_y_test, [3,4])
-    data_x_test=data_x_y_test[0]
-    data_y_test=data_x_y_test[1]
+    data_x_test = data_x_y_test[0]
+    data_y_test = data_x_y_test[1]
+
+    data_y_onehot_test = [[1, 0] if x[0] else [0, 1] for x in data_y_test]
 
     data_x_split_test = [data_x_test[x:x+n] for x in range(0, len(data_x_test), n)]
-    data_y_split_test = [data_y_test[x:x+n] for x in range(0, len(data_y_test), n)]
-    test_labels=[np.concatenate(a) for a in data_y_split_test]
-    test_fatures=tf.convert_to_tensor(data_x_split_test)
-    test_labels=tf.convert_to_tensor(test_labels)
-    print("read test data\n")
+    data_y_split_test = [data_y_onehot_test[x:x+n] for x in range(0, len(data_y_onehot_test), n)]
+    #test_labels=[np.concatenate(a) for a in data_y_split_test]
+    test_fatures = tf.convert_to_tensor(data_x_split_test)
+    test_labels = tf.convert_to_tensor(data_y_split_test)
+    print("read test data...\n")
 
     # print(test_labels)
     # print(test_fatures)
@@ -68,6 +74,10 @@ def getData():
 
 
 train_fatures, train_labels, test_fatures,  test_labels = getData()
+train_dataset_unb = tf.data.Dataset.from_tensor_slices((train_fatures, train_labels))
+train_dataset = train_dataset_unb.batch(batch_size=BATCH_SIZE)
+val_dataset_unb = tf.data.Dataset.from_tensor_slices((test_fatures,  test_labels))
+val_dataset = val_dataset_unb.batch(batch_size=BATCH_SIZE)
 
 def conv_block(x: tf.Tensor, filters: int, name: str) -> tf.Tensor:
     x = layers.Conv1D(filters, kernel_size=1, padding="valid", name=f"{name}_conv")(x)
@@ -187,10 +197,10 @@ lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
 steps = tf.range(total_training_steps, dtype=tf.int32)
 lrs = [lr_schedule(step) for step in steps]
 
-plt.plot(lrs)
-plt.xlabel("Steps")
-plt.ylabel("Learning Rate")
-plt.show()
+# plt.plot(lrs)
+# plt.xlabel("Steps")
+# plt.ylabel("Learning Rate")
+# plt.show()
 
 def run_experiment(epochs):
 
@@ -201,7 +211,7 @@ def run_experiment(epochs):
         metrics=["accuracy"],
     )
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "./tmp/checkpoint"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_loss",
@@ -212,12 +222,12 @@ def run_experiment(epochs):
     history = segmentation_model.fit(
         train_dataset,
         validation_data=val_dataset,
-        epochs=epochs,
-        callbacks=[checkpoint_callback],
+        epochs=epochs
+        #callbacks=[checkpoint_callback],
     )
 
-    segmentation_model.load_weights(checkpoint_filepath)
+    #segmentation_model.load_weights(checkpoint_filepath)
     return segmentation_model, history
 
 
-#segmentation_model, history = run_experiment(epochs=EPOCHS)
+segmentation_model, history = run_experiment(epochs=EPOCHS)
