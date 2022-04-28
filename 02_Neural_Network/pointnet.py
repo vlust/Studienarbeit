@@ -16,7 +16,7 @@ VAL_SPLIT = 0.2
 NUM_SAMPLE_POINTS = 50
 BATCH_SIZE = 32
 EPOCHS = 10
-INITIAL_LR = 1e-3
+INITIAL_LR = 1e-4
 
 
 
@@ -52,8 +52,16 @@ def getData():
     ################################################################
     #TRAIN DATA
     ################################################################
+    filename_train='C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_shuffled/training.csv'
     n=50
-    df = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_shuffled/training.csv')
+    df = pd.read_csv(filename_train)
+
+    rows=df.shape[0]
+    sum_cones=df['target'].sum()
+    zeros_cones=rows-sum_cones
+    print(f"zero cones= {zeros_cones}")
+    print(f"rows= {rows}")
+
     df['x']=df['x'].div(200)
     df['y']=df['x'].div(200)
     df['color']=df['color'].div(2)
@@ -63,7 +71,15 @@ def getData():
     data_x = data_x_y[0]
     data_y = data_x_y[1]
     #print(data_y)
-    data_y_onehot = [[1, 0] if x[0] else [0, 1] for x in data_y]
+    #data_y_onehot = [[1, 0] if x[0] else [0, 1] for x in data_y]
+    #
+    #[1, 0, 0] for real cone
+    #[0, 1, 0] for fake cone
+    #[0, 0, 1] for padiing
+    #data_y_onehot = [[1, 0, 0] if x[0]==1 else [0, 1, 0] if x[0]==2 else [0,0,1] for x in data_y]
+
+    #For pretraining:
+    data_y_onehot = [[0, 1] if x[0]==0 else [1, 0] for x in data_y]
     #print(data_y_onehot)
 
     data_x_split_train = [data_x[x:x+n] for x in range(0, len(data_x), n)]
@@ -80,6 +96,7 @@ def getData():
     #TEST DATA
     ################################################################
     df_test = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_shuffled/test.csv')
+
     df_test['x']=df_test['x'].div(200)
     df_test['y']=df_test['x'].div(200)
     df_test['color']=df_test['color'].div(2)
@@ -89,7 +106,9 @@ def getData():
     data_x_test = data_x_y_test[0]
     data_y_test = data_x_y_test[1]
 
-    data_y_onehot_test = [[1, 0] if x[0] else [0, 1] for x in data_y_test]
+    #data_y_onehot_test = [[1, 0] if x[0] else [0, 1] for x in data_y_test]
+    #data_y_onehot_test = [[1, 0, 0] if x[0]==1 else [0, 1, 0] if x[0]==2 else [0,0,1] for x in data_y_test]
+    data_y_onehot_test = [[0, 1] if x[0]==0 else [1, 0] for x in data_y_test]
 
     data_x_split_test = [data_x_test[x:x+n] for x in range(0, len(data_x_test), n)]
     data_y_split_test = [data_y_onehot_test[x:x+n] for x in range(0, len(data_y_onehot_test), n)]
@@ -97,6 +116,7 @@ def getData():
     test_fatures = tf.convert_to_tensor(data_x_split_test)
     test_labels = tf.convert_to_tensor(data_y_split_test)
     print("read test data...\n")
+    
 
     # print(test_labels)
     # print(test_fatures)
@@ -108,6 +128,7 @@ train_dataset_unb = tf.data.Dataset.from_tensor_slices((train_fatures, train_lab
 train_dataset = train_dataset_unb.batch(batch_size=BATCH_SIZE)
 val_dataset_unb = tf.data.Dataset.from_tensor_slices((test_fatures,  test_labels))
 val_dataset = val_dataset_unb.batch(batch_size=BATCH_SIZE)
+
 
 def conv_block(x: tf.Tensor, filters: int, name: str) -> tf.Tensor:
     x = layers.Conv1D(filters, kernel_size=1, padding="valid", name=f"{name}_conv")(x)
@@ -135,10 +156,11 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
         xxt = tf.reshape(xxt, (-1, self.num_features, self.num_features))
         return tf.reduce_sum(self.l2reg * tf.square(xxt - self.identity))
 
-    # def get_config(self):
-    #     config = super(TransformerEncoder, self).get_config()
-    #     config.update({"num_features": self.num_features, "l2reg_strength": self.l2reg})
-    #     return config
+    def get_config(self):
+        config = super().get_config()
+        config.update({"num_features": self.num_features, "l2reg_strength": self.l2reg})
+        return config
+
 def transformation_net(inputs: tf.Tensor, num_features: int, name: str) -> tf.Tensor:
     """
     Reference: https://keras.io/examples/vision/pointnet/#build-a-model.
@@ -233,15 +255,17 @@ lrs = [lr_schedule(step) for step in steps]
 # plt.show()
 
 def run_experiment(epochs):
-
+    checkpoint_filepath = "C:/Users/Anwender/Desktop/checkpoints/V5/MODEL_Point_net_V5_Pretrained"
+    checkpoint_filepath1 = "C:/Users/Anwender/Desktop/checkpoints/V4/MODEL_Point_net_V4_Pretraining"
     segmentation_model = get_shape_segmentation_model(num_points, num_classes)
+    segmentation_model.load_weights(checkpoint_filepath1)
     segmentation_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
         loss=keras.losses.CategoricalCrossentropy(),
         metrics=["accuracy"],
     )
 
-    checkpoint_filepath = "./tmp/checkpoint"
+    
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_loss",
@@ -249,15 +273,54 @@ def run_experiment(epochs):
         save_weights_only=True,
     )
 
+
     history = segmentation_model.fit(
         train_dataset,
         validation_data=val_dataset,
-        epochs=epochs
-        #callbacks=[checkpoint_callback],
+        epochs=epochs,
+        callbacks=[checkpoint_callback],
     )
 
-    #segmentation_model.load_weights(checkpoint_filepath)
+    segmentation_model.load_weights(checkpoint_filepath)
     return segmentation_model, history
 
+#LOAD MODEL
 
-segmentation_model, history = run_experiment(epochs=EPOCHS)
+checkpoint_filepath = "C:/Users/Anwender/Desktop/checkpoints/V3/MODEL_Point_net_V3"
+segmentation_model = get_shape_segmentation_model(num_points, num_classes)
+segmentation_model.load_weights(checkpoint_filepath)
+segmentation_model.compile(loss='binary_crossentropy', optimizer='rmsprop', 
+metrics=['accuracy'])
+test_results = {}
+test_results['model'] = segmentation_model.evaluate(
+    val_dataset, verbose=0)
+
+print(f" Accuracy: {test_results}")
+
+
+predictions=segmentation_model.predict(val_dataset)
+# xsum=0
+# ysum=0
+# for x in predictions:
+#     for y in x:
+#         ysum+=(round(float(y[1])))
+
+
+#print(f"pred sum: {xsum}")
+# for x in test_labels:
+#     for y in x:
+#         ysum+=np.argmax(y)
+#print(f"pred sum: {ysum}")
+
+#print(test_labels[0])
+
+
+# segmentation_model, history = run_experiment(epochs=EPOCHS)
+# hist_df = pd.DataFrame(history.history) 
+# hist_csv_file = 'history.csv'
+# with open(hist_csv_file, mode='w') as f:
+#     hist_df.to_csv(f)
+# dot_img_file = 'model_2.png'
+# tf.keras.utils.plot_model(segmentation_model, to_file=dot_img_file, show_shapes=True)
+# print(history)
+#segmentation_model.save('C:/Users/Anwender/Desktop/MODEL_Point_net' ,save_format='tf')

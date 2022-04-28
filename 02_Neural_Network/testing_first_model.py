@@ -22,6 +22,16 @@ def split_dataframe(df, chunk_size = 4):
         chunks.append(df[i*chunk_size:(i+1)*chunk_size])
     return chunks
 
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+initial_learning_rate=1e-5,
+decay_steps=1000,
+decay_rate=0.9)
+steps = tf.range(100000, dtype=tf.int32)
+lrs = [lr_schedule(step) for step in steps]
+plt.plot(lrs)
+plt.xlabel("Steps")
+plt.ylabel("Learning Rate")
+plt.savefig("Learning Rate 1")
 
 #df = pd.read_csv('02_Neural_Network/data.csv')
 
@@ -208,14 +218,15 @@ def build_model2():
     decay_steps=1000,
     decay_rate=0.9)
 
+
     model = keras.Sequential()
     #model.add(Normalization(axis=None))
 
     model.add(Flatten(input_shape=(50, 3)))
     #model.add(Dense(128, activation='elu'))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(160, activation='relu'))
     model.add(Dense(96, activation='elu'))
-    model.add(Dense(96, activation='relu'))
-    model.add(Dense(160, activation='elu'))
     #model.add(Dense(64, activation='relu'))
     
         # Dense(64, activation='elu'),
@@ -235,8 +246,12 @@ def build_model2():
 
 
 model=build_model2()
-model.fit(train_fatures, train_labels, batch_size=64, epochs=50)
-
+history=model.fit(train_fatures, train_labels, batch_size=64, epochs=50)
+hist_df = pd.DataFrame(history.history) 
+hist_csv_file = 'history_MLP.csv'
+with open(hist_csv_file, mode='w') as f:
+    hist_df.to_csv(f)
+dot_img_file = 'model_3.png'
 test_loss, test_acc = model.evaluate(test_fatures,  test_labels, verbose=2)
 
 print('\nTest accuracy:', test_acc)
@@ -281,5 +296,5 @@ print('\nTest accuracy:', test_acc)
 
 
 # model2= kt.load_model(tuner, 2)
-# model.save('C:/Users/Anwender/Desktop/MODEL_1')
+# model.save('C:/Users/Anwender/Desktop/MODEL_Point_net')
 # predictions = model.predict(test_fatures2)
