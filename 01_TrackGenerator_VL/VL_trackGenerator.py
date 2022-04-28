@@ -102,7 +102,7 @@ class TrackGenerator:
                         false_element, failed =TrackGenerator.not_connected_track_element(max_xy,track_data)
                         #t_3 = time.time()
                         if not failed:
-                                false_cones=TrackGenerator.get_cones(false_element, {"false_element": 0})
+                                false_cones=TrackGenerator.get_cones(false_element, {"false_element": 2})
                                 conedata.extend(false_cones)
                         #t_4 = time.time()
                         #print(f"d1 {t_1-t_0}, d2 {t_2-t_1}, d3 {t_3-t_2}, d4 {t_4-t_3}")
@@ -559,7 +559,7 @@ class TrackGenerator:
                 return to_return
 
         def add_random_cone(max_x,  max_y, min_x, min_y, n):
-                r_cones=[(uniform(min_x*1.2, max_x*1.2), uniform(min_y*1.2, max_y*1.2), choice([2,1]), 0) for _ in range(n[0])]
+                r_cones=[(uniform(min_x*1.2, max_x*1.2), uniform(min_y*1.2, max_y*1.2), choice([2,1]), 2) for _ in range(n[0])]
                 r_cones=[(round(point[0], 2), round(point[1], 2),point[2],point[3]) for point in r_cones]
                 return r_cones
                  
