@@ -37,8 +37,38 @@ def split_dataframe(df, chunk_size = 4):
 
 #my_data = np.genfromtxt('01_TrackGenerator_VL/tracks/ALL.csv', delimiter=',', encoding="utf8",skip_header=1)
 
+filename_train_data= 'C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled/training.csv'
+def get_train_data():
+    ################################################################
+    #TRAIN DATA
+    ################################################################
+    n=50
+    #Einlesen
+    df = pd.read_csv(filename_train_data)
 
+    #Normalisieren
+    norm_cones = df.values - np.mean(df.values, axis=0)
+    norm_cones /= np.max(np.linalg.norm(norm_cones, axis=1))
+    df['color']=df['color'].div(2)
 
+    #splitten in features und lables
+    data_x_y=df.values
+    data_x_y = np.hsplit(data_x_y, [3,4])
+    data_x=data_x_y[0]
+    data_y=data_x_y[1]
+
+    #Track splitten
+    data_x_split_train = [data_x[x:x+n] for x in range(0, len(data_x), n)]
+    data_y_split_train = [data_y[x:x+n] for x in range(0, len(data_y), n)]
+    train_labels=[np.concatenate(a) for a in data_y_split_train]
+
+    #zu tensorflow tensor convertieren
+    # train_fatures=convert_to_tensor(data_x_split_train)
+    # train_labels=convert_to_tensor(train_labels)
+    print("read training data\n")
+    return train_fatures, train_labels
+ 
+_=get_train_data()
 def getData():
     ################################################################
     #TRAIN DATA
