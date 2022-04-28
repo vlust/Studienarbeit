@@ -18,6 +18,36 @@ BATCH_SIZE = 32
 EPOCHS = 10
 INITIAL_LR = 1e-3
 
+
+
+def _getData():
+    ################################################################
+    #TRAIN DATA
+    ################################################################
+    n=50
+    df = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_shuffled/training.csv')
+    df['x']=df['x'].div(200)
+    df['y']=df['x'].div(200)
+    df['color']=df['color'].div(2)
+
+    data_x_y = df.values
+    data_x_y = np.hsplit(data_x_y, [3,4])
+    data_x = data_x_y[0]
+    data_y = data_x_y[1]
+
+    data_y_onehot = [[1, 0] if x[0] else [0, 1] for x in data_y]
+
+    data_x_split_train = [data_x[x:x+n] for x in range(0, len(data_x), n)]
+    data_y_split_train = [data_y_onehot[x:x+n] for x in range(0, len(data_y_onehot), n)]
+
+    #train_labels=[np.concatenate(a) for a in data_y_split_train]
+    train_fatures = tf.convert_to_tensor(data_x_split_train)
+    train_labels = tf.convert_to_tensor(data_y_split_train) 
+    return train_fatures, train_labels
+    print("read training data...\n")
+    # print(train_labels)
+    # print(train_fatures)
+
 def getData():
     ################################################################
     #TRAIN DATA
