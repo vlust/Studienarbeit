@@ -16,8 +16,8 @@ class TrackGenerator:
         MAX_CONSTANT_TURN = 45
         MAX_TRACK_LENGTH = 105
         MAX_ELEMENTS = 2
-        PROPABILITY_NO_RAND_CONE = 0.6
-        PROPABILITY_RAND_TRACK = 1
+        PROPABILITY_NO_RAND_CONE = 1
+        PROPABILITY_RAND_TRACK = 0.00
         PROPABILITY_EMPTY_TRACK = 0.00
 
         ################################################################
@@ -43,72 +43,49 @@ class TrackGenerator:
                 elementCounter = 0
 
                 # exit conditions
-                #error=False
                 failedCounter = 0
                 failedElement = True# initially cant choose empty element
                 finished = False
-                #t_before_while=time.time()
+
                 if not np.random.choice([0,1],p=[TrackGenerator.PROPABILITY_EMPTY_TRACK, 1-TrackGenerator.PROPABILITY_EMPTY_TRACK]):
                         return [], [], elementList, False
                 #loop for generating track elemnts
                 while finished is False:
-                        #t0 = time.time()
                         if failedCounter == 5:
                                 return None, None, None, True #Generation failed due to to many tries
-
                         if elementCounter == TrackGenerator.MAX_ELEMENTS:
                                 break #generation finished due to max number of elements
-
-                        #cur_track_data = []
                         cur_track_data = track_data.copy()
 
-                        #t1 = time.time()
                         data_out, tangent_out, normal_out, finished, elementType= TrackGenerator.randomElement(point_in, tangent_in, normal_in, failedElement)
                         
                         if finished:
                                 break
                         cur_track_data.extend(data_out[1:])
-                        #t2 = time.time()
                         if TrackGenerator.check_if_viable(cur_track_data, elementType, elementList[-1]):
                                 failedElement=False
                                 track_data=cur_track_data
                                 elementList.append(elementType)
-
                                 #prep for new data
                                 point_in = data_out[-1]
                                 tangent_in = tangent_out
                                 normal_in = normal_out
                                 elementCounter += 1
-                                
                         else:
                                 failedCounter += 1
                                 failedElement=True
-                        # t3 = time.time()
-                        # print(f"d1_loop {t1-t0}, d2_loop {t2-t1}, d3_loop {t3-t2}")
-
-                #t_after_while = time.time()
 
                 track_data=[(round(point[0], 2), round(point[1], 2)) for point in track_data]
                 conedata=TrackGenerator.get_cones(track_data)
 
-                #t_0 = time.time()
-
                 #Maybe add random false element
                 if not np.random.choice([0,1],p=[TrackGenerator.PROPABILITY_RAND_TRACK, 1-TrackGenerator.PROPABILITY_RAND_TRACK]):
-                        #t_1 = time.time()
                         max_xy=max(max(track_data, key = lambda i : i[0])[0],max(track_data, key = lambda i : i[1])[1], key = abs) # get max xy value 
 
-                        #t_2 = time.time()
                         false_element, failed =TrackGenerator.not_connected_track_element(max_xy,track_data)
-                        #t_3 = time.time()
                         if not failed:
                                 false_cones=TrackGenerator.get_cones(false_element, {"false_element": 2})
                                 conedata.extend(false_cones)
-                        #t_4 = time.time()
-                        #print(f"d1 {t_1-t_0}, d2 {t_2-t_1}, d3 {t_3-t_2}, d4 {t_4-t_3}")
-
-                #t_after_false_elem = time.time()
-
                 return track_data, conedata, elementList, False
 
         def not_connected_track_element(max_xy, track):
