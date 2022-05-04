@@ -14,8 +14,8 @@ from sklearn.utils import shuffle
 from tqdm import tqdm
 
 
-NUMBER_OF_TRACKS = 1
-NUMBER_OF_BATCHES = 10
+NUMBER_OF_TRACKS = 20
+NUMBER_OF_BATCHES = 1
 path = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -38,16 +38,16 @@ def save_csv_allpoints(track, cones, elements, i):
 
 def save_csv(cones, filenumber, i):
     df = pd.DataFrame(cones, columns=['x', 'y', 'color', 'target'])
-    # df=df[:50]
-    # df_shuffled=df.iloc[np.random.permutation(len(df))]
-    # df_shuffled=df_shuffled.reset_index(drop=True)
+    df=df[:50]
+    df_shuffled=df.iloc[np.random.permutation(len(df))]
+    df_shuffled=df_shuffled.reset_index(drop=True)
 
     #df['no'] = i
-    # filled_df=fill_df_rand(df)
-    # filled_df=fill_df_zero(df_shuffled)
-    TrackGenerator.show_cones(df.values.tolist())
+
+    filled_df=fill_df_zero(df_shuffled)
+    TrackGenerator.show_cones(filled_df.values.tolist())
     filename = f"/tracks/temp/tracks_batch#{filenumber}.csv"
-    df.to_csv(path+filename, mode='a', index=False, header=False)
+    filled_df.to_csv(path+filename, mode='a', index=False, header=False)
 
 
 def fill_df_rand(df):
@@ -88,8 +88,8 @@ def macro_track_to_csv(filenumber):
             # print(f"*********************** track for file #{filenumber+1} added {i+1} *******************************")
             counter = 0
         if not error:
-            #save_csv(cones, filenumber, i)
-            save_csv_allpoints(track, cones, elements, filenumber)
+            save_csv(cones, filenumber, i)
+            #save_csv_allpoints(track, cones, elements, filenumber)
         #t1 = time.time()
         #print(f"time: {t1-t0}\n")
 

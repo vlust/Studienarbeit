@@ -18,7 +18,7 @@ class TrackGenerator:
     MAX_TRACK_LENGTH = 105
     MAX_ELEMENTS = 2
     PROPABILITY_NO_RAND_CONE = 1
-    PROPABILITY_RAND_TRACK = 0.00
+    PROPABILITY_RAND_TRACK = 1.00
     PROPABILITY_EMPTY_TRACK = 0.00
 
     ################################################################
@@ -92,6 +92,8 @@ class TrackGenerator:
                 false_cones = TrackGenerator.get_cones(
                     false_element, {"false_element": 2})
                 conedata.extend(false_cones)
+        #Filter ConeData for 180 deg vow
+        conedata=[x for x in conedata  if x[0]>=0 ]
         return track_data, conedata, elementList, False
 
     def not_connected_track_element(max_xy, track):
