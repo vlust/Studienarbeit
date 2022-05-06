@@ -18,7 +18,7 @@ import pandas as pd
 # pn=[30,30]
 
 # p5=[60,20]
-# p6=[-60,30] 
+# p6=[-60,30]
 
 # param1 = {
 #   "turn_against_normal": False,
@@ -35,16 +35,16 @@ import pandas as pd
 # param2 = {
 #   "false_element": 0,
 # }
- 
+
 # param3 = {
 #   "scale_in": 20,
 #   "scale_out": 20,
-  
+
 # }
-# param33 = { 
+# param33 = {
 #   "scale_in": 100,
 #   "scale_out": 100,
-  
+
 # }
 
 ######################## DATA ############################
@@ -73,7 +73,7 @@ import pandas as pd
 
 # my_path = os.path.dirname(os.path.abspath(__file__)) # Figures out the absolute path for you in case your working directory moves around.
 
-data, cones, elements, error=TrackGenerator.generate_randomTrack()
+data, cones, elements, error = TrackGenerator.generate_randomTrack()
 print(f"ERROR {error}")
 # track=[]
 # for point in data:
@@ -84,9 +84,9 @@ print(f"ERROR {error}")
 # df = pd.DataFrame(cones, columns =['x', 'y', 'color'])
 # df.append(data[0:len(data):5])
 # print(df)
-#print(cones)
+# print(cones)
 print(f"ELEMENTS {elements}")
-TrackGenerator.visualize_all(data,cones)
+TrackGenerator.visualize_all(data, cones)
 
 
 # # Data to be written
@@ -99,13 +99,13 @@ TrackGenerator.visualize_all(data,cones)
 #     "cones":aList
 # }
 
-# # Serializing json 
+# # Serializing json
 # json_object = json.dumps(track_obj, indent = 4)
-  
+
 # # Writing to sample.json
 # with open(my_path+"/&sample.json", "w") as outfile:
 #     outfile.write(json_object)
 
 # with open(my_path+"/&sample.json", "r") as file:
 #     jObj=json.load(file)
-#TrackGenerator.show_track(data)
+# TrackGenerator.show_track(data)
