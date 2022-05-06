@@ -14,8 +14,8 @@ from sklearn.utils import shuffle
 from tqdm import tqdm
 
 
-NUMBER_OF_TRACKS = 20
-NUMBER_OF_BATCHES = 1
+NUMBER_OF_TRACKS = 4000
+NUMBER_OF_BATCHES = 10
 path = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -45,7 +45,7 @@ def save_csv(cones, filenumber, i):
     #df['no'] = i
 
     filled_df=fill_df_zero(df_shuffled)
-    TrackGenerator.show_cones(filled_df.values.tolist())
+    #TrackGenerator.show_cones(filled_df.values.tolist())
     filename = f"/tracks/temp/tracks_batch#{filenumber}.csv"
     filled_df.to_csv(path+filename, mode='a', index=False, header=False)
 
@@ -76,9 +76,9 @@ def savefig(track, cones, i):
 
 
 def macro_track_to_csv(filenumber):
-    # header = pd.DataFrame(columns=['x','y','color','target'])
-    # filename=f"/tracks/temp/tracks_batch#{filenumber}.csv"
-    # header.to_csv(path+filename,index=False)
+    header = pd.DataFrame(columns=['x','y','color','target'])
+    filename=f"/tracks/temp/tracks_batch#{filenumber}.csv"
+    header.to_csv(path+filename,index=False)
     counter = 0
     for i in tqdm(range(NUMBER_OF_TRACKS)):
         #t0 = time.time()
