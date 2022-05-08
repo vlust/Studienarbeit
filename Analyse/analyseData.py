@@ -59,7 +59,7 @@ def getData():
     ################################################################
     #TEST DATA
     ################################################################
-    df_test = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_shuffled_3class/test.csv')
+    df_test = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_180deg/test.csv')
     for i in range(len(df_test['target'])):
         if df_test['target'][i] == 2:
             df_test.iat[i, df_test.columns.get_loc('target')] = 0
@@ -86,75 +86,75 @@ def getData():
     # print(test_fatures)
     return  test_fatures,  test_labels
 
-# test_features,  test_labels = getData()
-# test_features_x=[]
-# test_features_y=[]
-# for track in test_features:
-#     test_features_x.append([x[0] for x in track])
-#     test_features_y.append([x[1] for x in track])
+test_features,  test_labels = getData()
+test_features_x=[]
+test_features_y=[]
+for track in test_features:
+    test_features_x.append([x[0] for x in track])
+    test_features_y.append([x[1] for x in track])
 
 
 
 
-# sum1=[x.sum() for x in test_labels]
+sum1=[x.sum() for x in test_labels]
 
 
-# # plt.scatter(test_features_x[0],test_features_y[0])
-# # plt.show()
+# plt.scatter(test_features_x[0],test_features_y[0])
+# plt.show()
 
-# predictions = np.loadtxt('test2.txt', dtype=int)
+predictions = np.loadtxt('score.txt', dtype=int)
 
-# sum2=50-predictions.sum(axis=1)
+sum2=50-predictions.sum(axis=1)
 
-# # print(sum1.shape)
-# # print(sum2.shape)
-# indexs=[]
+# print(sum1.shape)
+# print(sum2.shape)
+indexs=[]
 
-# for i in range(len(sum1)):
+for i in range(len(sum1)):
 
-#     if sum1[i].sum() == sum2[i].sum() and min(map(abs,test_features_y[i]))!=0 and sum2[i]<50:
-#         indexs.append(i)
-# print(len(indexs))
+    if sum1[i].sum() == sum2[i].sum()-1 and min(map(abs,test_features_y[i]))!=0 and sum2[i]<50:
+        indexs.append(i)
+print(len(indexs))
 
-# sample_list = random.choices(indexs, k=50)
-# print()
-# for index in indexs:
-#     x1=[]
-#     x2=[]
-#     y1=[]
-#     y2=[]
-#     for i in range(len(predictions[index])):
-#         if predictions[index][i]:
-#             x1.append(test_features_x[index][i])
-#             y1.append(test_features_y[index][i])
-#         else:
-#             x2.append(test_features_x[index][i])
-#             y2.append(test_features_y[index][i])
+sample_list = random.choices(indexs, k=50)
+print()
+for index in indexs:
+    x1=[]
+    x2=[]
+    y1=[]
+    y2=[]
+    for i in range(len(predictions[index])):
+        if predictions[index][i]:
+            x1.append(test_features_x[index][i])
+            y1.append(test_features_y[index][i])
+        else:
+            x2.append(test_features_x[index][i])
+            y2.append(test_features_y[index][i])
 
-#     plt.clf()
-#     fig, axs = plt.subplots(1)
-#     axs.scatter(x1, y1)
-#     axs.scatter(x2, y2)
-#     plt.axis('scaled')
-#     plt.savefig(f'Analyse/images/image_{index}.png')
+    plt.clf()
+    fig, axs = plt.subplots(1)
+    axs.scatter(x1, y1)
+    axs.scatter(x2, y2)
+    plt.axis('scaled')
+    plt.savefig(f'Analyse/images/image_{index}.png')
 
-df = pd.read_csv('history.csv')
-print(df)
-x=[1, 2,3, 4, 5]
-y1=[]
-y2=[]
-for i in range(5):
-    y1.append(df['loss'][i])
-    y2.append(df['accuracy'][i])
+# df = pd.read_csv('history.csv')
+# print(df)
+# x=[1, 2,3, 4, 5]
+# y1=[]
+# y2=[]
+# for i in range(5):
+#     y1.append(df['loss'][i])
+#     y2.append(df['accuracy'][i])
 
-fig, ax1 = plt.subplots()
+# fig, ax1 = plt.subplots()
 
-ax2 = ax1.twinx()
-ax1.plot(x, y1, 'g-')
-ax2.plot(x, y2, 'b-')
+# ax2 = ax1.twinx()
+# ax1.plot(x, y1, 'g-')
+# ax2.plot(x, y2, 'b-')
 
-ax1.set_xlabel('Epochen')
-ax1.set_ylabel('Loss', color='g')
-ax2.set_ylabel('Accuracy', color='b')
+# ax1.set_xlabel('Epochen')
+# ax1.set_ylabel('Loss', color='g')
+# ax2.set_ylabel('Accuracy', color='b')
 
-plt.show()
+# plt.show()

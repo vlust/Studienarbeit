@@ -15,12 +15,12 @@ import matplotlib.pyplot as plt
 VAL_SPLIT = 0.2
 NUM_SAMPLE_POINTS = 50
 BATCH_SIZE = 32
-EPOCHS = 10
+EPOCHS = 2
 INITIAL_LR = 1e-4
 
 
 
-def _getData():
+def _getData3():
     ################################################################
     #TRAIN DATA
     ################################################################
@@ -52,7 +52,7 @@ def getData():
     ################################################################
     #TRAIN DATA
     ################################################################
-    filename_train='C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_shuffled/training.csv'
+    filename_train='C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_180deg/training.csv'
     n=50
     df = pd.read_csv(filename_train)
 
@@ -71,7 +71,7 @@ def getData():
     data_x = data_x_y[0]
     data_y = data_x_y[1]
     #print(data_y)
-    #data_y_onehot = [[1, 0] if x[0] else [0, 1] for x in data_y]
+    data_y_onehot = [[1, 0] if x[0]==1 else [0, 1] for x in data_y]
     #
     #[1, 0, 0] for real cone
     #[0, 1, 0] for fake cone
@@ -79,7 +79,7 @@ def getData():
     #data_y_onehot = [[1, 0, 0] if x[0]==1 else [0, 1, 0] if x[0]==2 else [0,0,1] for x in data_y]
 
     #For pretraining:
-    data_y_onehot = [[0, 1] if x[0]==0 else [1, 0] for x in data_y]
+    #data_y_onehot = [[0, 1] if x[0]==0 else [1, 0] for x in data_y]
     #print(data_y_onehot)
 
     data_x_split_train = [data_x[x:x+n] for x in range(0, len(data_x), n)]
@@ -95,7 +95,7 @@ def getData():
     ################################################################
     #TEST DATA
     ################################################################
-    df_test = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_shuffled/test.csv')
+    df_test = pd.read_csv('C:/Users/Anwender/Desktop/Studienarbeit_Data/zeros_filled_180deg/test.csv')
 
     df_test['x']=df_test['x'].div(200)
     df_test['y']=df_test['x'].div(200)
@@ -106,9 +106,9 @@ def getData():
     data_x_test = data_x_y_test[0]
     data_y_test = data_x_y_test[1]
 
-    #data_y_onehot_test = [[1, 0] if x[0] else [0, 1] for x in data_y_test]
+    data_y_onehot_test = [[1, 0] if  x[0]==1 else [0, 1] for x in data_y_test]
     #data_y_onehot_test = [[1, 0, 0] if x[0]==1 else [0, 1, 0] if x[0]==2 else [0,0,1] for x in data_y_test]
-    data_y_onehot_test = [[0, 1] if x[0]==0 else [1, 0] for x in data_y_test]
+    #data_y_onehot_test = [[0, 1] if x[0]==0 else [1, 0] for x in data_y_test]
 
     data_x_split_test = [data_x_test[x:x+n] for x in range(0, len(data_x_test), n)]
     data_y_split_test = [data_y_onehot_test[x:x+n] for x in range(0, len(data_y_onehot_test), n)]
@@ -241,13 +241,13 @@ training_step_size = total_training_examples // BATCH_SIZE
 total_training_steps = training_step_size * EPOCHS
 print(f"Total training steps: {total_training_steps}.")
 
-lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
-    boundaries=[training_step_size * 15, training_step_size * 15],
-    values=[INITIAL_LR, INITIAL_LR * 0.5, INITIAL_LR * 0.25],
-)
+# lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
+#     boundaries=[training_step_size * 15, training_step_size * 15],
+#     values=[INITIAL_LR, INITIAL_LR * 0.5, INITIAL_LR * 0.25],
+# )
 
-steps = tf.range(total_training_steps, dtype=tf.int32)
-lrs = [lr_schedule(step) for step in steps]
+# steps = tf.range(total_training_steps, dtype=tf.int32)
+# lrs = [lr_schedule(step) for step in steps]
 
 # plt.plot(lrs)
 # plt.xlabel("Steps")
@@ -255,10 +255,10 @@ lrs = [lr_schedule(step) for step in steps]
 # plt.show()
 
 def run_experiment(epochs):
-    checkpoint_filepath = "C:/Users/Anwender/Desktop/checkpoints/V5/MODEL_Point_net_V5_Pretrained"
+    checkpoint_filepath = "C:/Users/Anwender/Desktop/checkpoints/V6/MODEL_Point_net_V6_180"
     checkpoint_filepath1 = "C:/Users/Anwender/Desktop/checkpoints/V4/MODEL_Point_net_V4_Pretraining"
     segmentation_model = get_shape_segmentation_model(num_points, num_classes)
-    segmentation_model.load_weights(checkpoint_filepath1)
+    #segmentation_model.load_weights(checkpoint_filepath1)
     segmentation_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
         loss=keras.losses.CategoricalCrossentropy(),
@@ -286,7 +286,7 @@ def run_experiment(epochs):
 
 #LOAD MODEL
 
-checkpoint_filepath = "C:/Users/Anwender/Desktop/checkpoints/V3/MODEL_Point_net_V3"
+checkpoint_filepath = "C:/Users/Anwender/Desktop/checkpoints/V6/MODEL_Point_net_V6_180"
 segmentation_model = get_shape_segmentation_model(num_points, num_classes)
 segmentation_model.load_weights(checkpoint_filepath)
 segmentation_model.compile(loss='binary_crossentropy', optimizer='rmsprop', 
@@ -299,17 +299,22 @@ print(f" Accuracy: {test_results}")
 
 
 predictions=segmentation_model.predict(val_dataset)
+preds=[]
+for pred in predictions:
+    preds.append(np.array([np.argmax(x) for x in pred]))
+smth=np.array(preds)
+#print(smth)
+np.savetxt("score.txt",smth , fmt="%d")
 # xsum=0
 # ysum=0
-# for x in predictions:
-#     for y in x:
-#         ysum+=(round(float(y[1])))
+
+
 
 
 #print(f"pred sum: {xsum}")
 # for x in test_labels:
 #     for y in x:
-#         ysum+=np.argmax(y)
+#         ysum+=
 #print(f"pred sum: {ysum}")
 
 #print(test_labels[0])
