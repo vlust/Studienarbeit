@@ -92,8 +92,8 @@ class TrackGenerator:
                 false_cones = TrackGenerator.get_cones(
                     false_element, {"false_element": 2})
                 conedata.extend(false_cones)
-        #Filter ConeData for 180 deg vow
-        conedata=[x for x in conedata  if x[0]>=0 ]
+        # Filter ConeData for 180 deg vow
+        conedata = [x for x in conedata if x[0] >= 0]
         return track_data, conedata, elementList, False
 
     def not_connected_track_element(max_xy, track):

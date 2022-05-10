@@ -38,14 +38,14 @@ def save_csv_allpoints(track, cones, elements, i):
 
 def save_csv(cones, filenumber, i):
     df = pd.DataFrame(cones, columns=['x', 'y', 'color', 'target'])
-    df=df[:50]
-    df_shuffled=df.iloc[np.random.permutation(len(df))]
-    df_shuffled=df_shuffled.reset_index(drop=True)
+    df = df[:50]
+    df_shuffled = df.iloc[np.random.permutation(len(df))]
+    df_shuffled = df_shuffled.reset_index(drop=True)
 
     #df['no'] = i
 
-    filled_df=fill_df_zero(df_shuffled)
-    #TrackGenerator.show_cones(filled_df.values.tolist())
+    filled_df = fill_df_zero(df_shuffled)
+    # TrackGenerator.show_cones(filled_df.values.tolist())
     filename = f"/tracks/temp/tracks_batch#{filenumber}.csv"
     filled_df.to_csv(path+filename, mode='a', index=False, header=False)
 
@@ -76,9 +76,9 @@ def savefig(track, cones, i):
 
 
 def macro_track_to_csv(filenumber):
-    header = pd.DataFrame(columns=['x','y','color','target'])
-    filename=f"/tracks/temp/tracks_batch#{filenumber}.csv"
-    header.to_csv(path+filename,index=False)
+    header = pd.DataFrame(columns=['x', 'y', 'color', 'target'])
+    filename = f"/tracks/temp/tracks_batch#{filenumber}.csv"
+    header.to_csv(path+filename, index=False)
     counter = 0
     for i in tqdm(range(NUMBER_OF_TRACKS)):
         #t0 = time.time()
