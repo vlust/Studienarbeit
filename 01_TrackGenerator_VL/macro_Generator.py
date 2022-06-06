@@ -82,7 +82,7 @@ def macro_track_to_csv(filenumber):
     counter = 0
     for i in tqdm(range(NUMBER_OF_TRACKS)):
         #t0 = time.time()
-        track, cones, elements, error = TrackGenerator.generate_randomTrack()
+        track, cones, elements, error = TrackGenerator.generate_random_local_track()
         counter += 1
         if counter == 100:
             # print(f"*********************** track for file #{filenumber+1} added {i+1} *******************************")

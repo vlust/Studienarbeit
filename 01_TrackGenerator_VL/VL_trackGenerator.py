@@ -25,7 +25,7 @@ class TrackGenerator:
     # MAKRO GENERATOR FUNCTIONS
     ################################################################
 
-    def generate_randomTrack():
+    def generate_random_local_track():
         """
         generates random track with max amount of TrackGenerator.MAX_ELEMENTS track elements
         """
@@ -58,7 +58,7 @@ class TrackGenerator:
                 break  # generation finished due to max number of elements
             cur_track_data = track_data.copy()
 
-            data_out, tangent_out, normal_out, finished, elementType = TrackGenerator.randomElement(
+            data_out, tangent_out, normal_out, finished, elementType = TrackGenerator.random_trackelement(
                 point_in, tangent_in, normal_in, failedElement)
 
             if finished:
@@ -86,7 +86,7 @@ class TrackGenerator:
             max_xy = max(max(track_data, key=lambda i: i[0])[0], max(
                 track_data, key=lambda i: i[1])[1], key=abs)  # get max xy value
 
-            false_element, failed = TrackGenerator.not_connected_track_element(
+            false_element, failed = TrackGenerator.add_not_connected_track_element(
                 max_xy, track_data)
             if not failed:
                 false_cones = TrackGenerator.get_cones(
@@ -96,7 +96,7 @@ class TrackGenerator:
         conedata = [x for x in conedata if x[0] >= 0]
         return track_data, conedata, elementList, False
 
-    def not_connected_track_element(max_xy, track):
+    def add_not_connected_track_element(max_xy, track):
         # new point anywhere in range of track
 
         to_check = []
@@ -129,7 +129,7 @@ class TrackGenerator:
                 failed = True
                 break
 
-            rand_track, _, _ = TrackGenerator.random_Bezier(
+            rand_track, _, _ = TrackGenerator.add_random_Bezier(
                 point_out, scale_vector(tangent_out, -1), 1)
             to_check = track.copy()
             to_check.extend(rand_track)
@@ -141,7 +141,7 @@ class TrackGenerator:
 
         return rand_track[::-1], failed
 
-    def randomElement(point_in, tangent_in, normal_in, newElement=None):
+    def random_trackelement(point_in, tangent_in, normal_in, newElement=None):
         """
         Adds new random Track element (if newElement is TRUE then empty track element is not an option)
         """
@@ -152,15 +152,15 @@ class TrackGenerator:
 
         finished = False  # last track element?
         if newElement:
-            functions = [TrackGenerator.random_Bezier,
+            functions = [TrackGenerator.add_random_Bezier,
                          TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
             i = choice(range(len(functions)))
             data_out, tangent_out, normal_out = (
                 functions)[i](point_in, tangent_in, normal_in)
             track_element = i
         else:
-            functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight,
-                         TrackGenerator.add_constant_turn, TrackGenerator.emptyElement]
+            functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_straight,
+                         TrackGenerator.add_constant_turn, TrackGenerator.add_empty_element]
             i = choice(range(len(functions)))
             data_out, tangent_out, normal_out = (
                 functions)[i](point_in, tangent_in, normal_in)
@@ -181,7 +181,7 @@ class TrackGenerator:
     ################################################################
     # TRACKELEMENT FUNCTIONS
     ################################################################
-    def emptyElement(point_in,
+    def add_empty_element(point_in,
                      tangent_in,
                      normal_in):
         return None, tangent_in, normal_in
@@ -265,7 +265,7 @@ class TrackGenerator:
             normalize_vec(normal_out)
         )
 
-    def random_Bezier(point_in, tangent_in, normal_in):
+    def add_random_Bezier(point_in, tangent_in, normal_in):
         """
         creates random beziew element with point on arc with random degree alpha and random distance r and random output tangent beta.
         """
@@ -340,7 +340,7 @@ class TrackGenerator:
         points_out = TrackGenerator.de_parameterize(circle_function)
 
         # Calculate total length
-        #added_length = turn_angle * radius
+        # added_length = turn_angle * radius
 
         # Now we want to find the new normal vector,
         normal_out = normalize_vec((

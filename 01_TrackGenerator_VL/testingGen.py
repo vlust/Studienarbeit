@@ -73,7 +73,7 @@ import pandas as pd
 
 # my_path = os.path.dirname(os.path.abspath(__file__)) # Figures out the absolute path for you in case your working directory moves around.
 
-data, cones, elements, error = TrackGenerator.generate_randomTrack()
+data, cones, elements, error = TrackGenerator.generate_random_local_track()
 print(f"ERROR {error}")
 # track=[]
 # for point in data:
