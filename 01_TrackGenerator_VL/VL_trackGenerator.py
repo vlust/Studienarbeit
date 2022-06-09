@@ -24,6 +24,14 @@ class TrackGenerator:
     ################################################################
     # MAKRO GENERATOR FUNCTIONS
     ################################################################
+    def generate_to_next_checkpoint():
+        """
+        Generates track components to next checkpoint.
+
+        Input: point_in/out, tangent_in/out
+        
+        Output: points_out, tangent_out, normal_out, added_length
+        """
 
     def generate_random_local_track():
         """
@@ -94,7 +102,7 @@ class TrackGenerator:
                 conedata.extend(false_cones)
         # Filter ConeData for 180 deg vow
         conedata = [x for x in conedata if x[0] >= 0]
-        return track_data, conedata, elementList, False
+        return track_data, conedata, elementList, False 
 
     def add_not_connected_track_element(max_xy, track):
         # new point anywhere in range of track
