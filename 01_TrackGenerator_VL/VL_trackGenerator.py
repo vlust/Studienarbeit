@@ -654,7 +654,6 @@ class TrackGenerator:
         plt.axis('scaled')
         plt.show()
 
-
 class Parametrization:
     """
     Parametrization functions are defined as functions which take a number \elem [0,1]
