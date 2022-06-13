@@ -12,15 +12,16 @@ point_out=(-100,-20)
 i=0
 notviable=True
 while notviable:
-    data,check_points,success =TrackGenerator.generate_random_track((0,0))
+    data,check_points,success, dir_point =TrackGenerator.generate_random_track((0,0))
     notviable= not success
-    print(check_points)
+    #print(check_points)
     print(f'TRY NR {i}')
     i+=1
     out=list(zip(*data))
     plt.plot(out[0], out[1])
     for point in check_points:
         plt.scatter(point[0],point[1])
+    plt.scatter(dir_point[0],dir_point[1])
     plt.axis('scaled')
     plt.show()
     

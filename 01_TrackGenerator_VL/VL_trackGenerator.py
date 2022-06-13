@@ -1,3 +1,4 @@
+from pickle import NONE
 from tkinter import FALSE
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,19 +10,19 @@ import time
 
 
 class TrackGenerator:
-    FIDELITY = 100
+    FIDELITY = 300
     TRACK_WIDTH = 3.5
     MIN_STRAIGHT = 5
     MAX_STRAIGHT = 80
     MIN_CONSTANT_TURN = 10
     MAX_CONSTANT_TURN = 45
-    MAX_TRACK_LENGTH = 1000
+    MAX_TRACK_LENGTH = 1500
     MAX_ELEMENTS = 2
     PROPABILITY_NO_RAND_CONE = 0.3
     PROPABILITY_RAND_TRACK = 1.00
     PROPABILITY_EMPTY_TRACK = 0.00
 
-    FUZZ_RADIUS = 2
+    FUZZ_RADIUS = 10
 
     ################################################################
     # MAKRO GENERATOR FUNCTIONS
@@ -35,7 +36,9 @@ class TrackGenerator:
         total_points = []
 
         # We start with a small linear
-        initial_tangent = normalize_vec((uniform(-1, 1), uniform(-1, 1)))
+        # initial_tangent = normalize_vec((uniform(-1, 1), uniform(-1, 1)))
+        initial_tangent = normalize_vec((1, -0.5))
+
         tangent_in = initial_tangent
         point_in = start_point
         normal_in = get_normal_vector(tangent_in)
@@ -45,7 +48,7 @@ class TrackGenerator:
             normal_in,
             {'length':TrackGenerator.MIN_STRAIGHT}
         )
-        total_points.extend(points_out)
+        total_points.extend(points_out[1:])
 
 
         # Now we want to set checkpoints to pass through:
@@ -59,47 +62,55 @@ class TrackGenerator:
         # This controls how much it tries to salvage a bad run
         # It turns out that most times it fails, its not salvageable,
         # so I set it to 1 so that as soon as it fails it scraps the run.
-        max_fails = 1
+        max_fails = 3
         fails = 0
 
         print('goal points created')
+        viable = False
 
         # And now we generate towards each goal point
         for goal_point in goal_points:
-            print('goal point one')
-            prev_points = total_points
+            viable=False
+            fails=0
+            while not viable:
+                print(goal_point)
+                prev_points = total_points
 
-            # Prepare inputs
-            tangent_in = tangent_out
-            normal_in = normal_out
-            point_out = goal_point
-            point_in = points_out[-1]
+                # Prepare inputs
+                tangent_in = tangent_out
+                normal_in = normal_out
+                point_out = goal_point
+                point_in = points_out[-1]
 
-            # Generate from point to point
-            points_out, tangent_out, normal_out  = TrackGenerator.generate_to_next_checkpoint(
-                [point_in],
-                point_out,
-                tangent_in,
-                20
-            )
+                # Generate from point to point
+                points_out, tangent_out, normal_out  = TrackGenerator.generate_to_next_checkpoint(
+                    [point_in],
+                    point_out,
+                    tangent_in,
+                    20
+                )
 
-            # This grabs the last component's points.
-            total_points.extend(points_out)
+                # This grabs the last component's points.
+                total_points.extend(points_out[1:])
 
+                # Now let's do early-checking for overlaps
+                short_points=[p for i, p in enumerate(total_points) if (i%10==9)]
+                print(len(total_points))
+                print(len(short_points))
+                viable = TrackGenerator.check_if_viable(short_points, 0, 1)
+                # if not TrackGenerator.check_if_viable(total_points, 0, 1):
 
-            # Now let's do early-checking for overlaps
-
-            if not TrackGenerator.check_if_viable(total_points, 0, 1):
-
-                # Generation failed test, undo last bit
-                fails += 1
-                total_points = prev_points
-                print('not viable')
+                #     # Generation failed test, undo last bit
+                if not viable:
+                    fails += 1
+                    total_points = prev_points
+                    print('not viable')
 
                 if fails == max_fails:
-                    return (total_points,goal_points, False)
+                    print('FAILED DUE TO MAX FAILED')
+                    return (total_points,goal_points, False, (0,0))
                     
-
+        print('where out!!!')
         # Now lets head back to the start:
         # We're gonna set a checkpoint that is close but not exactly the start point
         # so that we have breathing room for the final manouever:
@@ -117,9 +128,9 @@ class TrackGenerator:
             [point_in],
             point_out,
             tangent_in,
-            0
+            2
         )
-        total_points.extend(points_out)
+        total_points.extend(points_out[1:])
 
         # Now we will add a circle to point directly away from start point
         tangent_in = tangent_out
@@ -133,6 +144,7 @@ class TrackGenerator:
             tangent_in,
             tangent_out,
         )
+        total_points.extend(points_out[1:])
 
         # Sometimes the tangents don't actually match up
         # so if that happens, we throw out the track and start a new.
@@ -141,7 +153,7 @@ class TrackGenerator:
 
         
 
-        return total_points, goal_points, True
+        return total_points, goal_points, True, directing_point
 
     def generate_to_next_checkpoint(points_in, point_out, tangent_in, depth):
         """
@@ -166,7 +178,7 @@ class TrackGenerator:
                 normal_in, 
             )
         )
-        all_points_out.extend(points_out)
+        all_points_out.extend(points_out[1:])
         #added_length += delta_length
         #register_output(components, points_out)
 
@@ -187,7 +199,7 @@ class TrackGenerator:
                 normal_in,
                 {'length':straight_length}
             )
-            all_points_out.extend(points_out)
+            all_points_out.extend(points_out[1:])
             #register_output(components, points_out)
 
         # If we are far away from the goal, we want to get closer to it in a
@@ -206,7 +218,7 @@ class TrackGenerator:
                 normal_in,
                 {'length':straight_length}
             )
-            all_points_out.extend(points_out)
+            all_points_out.extend(points_out[1:])
             #register_output(components, points_out)
 
             # Prepare data for next component
@@ -221,7 +233,7 @@ class TrackGenerator:
                     normal_in
                 )
             )
-            all_points_out.extend(points_out)
+            all_points_out.extend(points_out[1:])
             #register_output(components, points_out)
 
             # Prepare data for next component
@@ -395,7 +407,7 @@ class TrackGenerator:
         checks if added track element is viable
         """
         doubleStraight = newElement == lastElement == 1
-        return not TrackGenerator.intersectsWithSelf(toCheck_track_data) and not doubleStraight
+        return (not TrackGenerator.intersectsWithSelf(toCheck_track_data)) and (not doubleStraight)
 
     ################################################################
     # TRACKELEMENT FUNCTIONS
@@ -586,7 +598,12 @@ class TrackGenerator:
 
         """
         normal_in = get_normal_vector(tangent_in)
+
         # Load in params
+        
+        if "turn_against_normal" in params:
+                normal_in = scale_vector(normal_in, -1)
+
         if "radius" in params:
             radius = params["radius"]
         else:
@@ -594,17 +611,23 @@ class TrackGenerator:
                 TrackGenerator.MIN_CONSTANT_TURN,
                 (TrackGenerator.MAX_CONSTANT_TURN-TrackGenerator.MIN_CONSTANT_TURN)/3
             )
-
+        print(f'NORMAL{normal_in}')
         if "recursed" in params:
             recursed = params["recursed"]
         else:
             recursed = False
-
         center = add_vectors(point_in, scale_vector(normal_in, radius))
+                # je nach Orientierung des Tracks muss die Richtung der gezeichneten Kreise geändert werden
+        def sgn(x):
+            """-1 if x is negative, +1 if positive, 0 if 0."""
+            return -1 if x < 0 else 1 if x > 0 else 0
+        handedness = sgn(
+            tangent_in[0] * normal_in[1] - tangent_in[1] * normal_in[0])
+        turn_angle = handedness * 1 * np.pi * 2
 
+        # And now grab output points
         circle_function = TrackGenerator.parametric_circle(
-            point_in, center, 2*np.pi)
-
+            point_in, center, turn_angle)
         full_circle_points = TrackGenerator.de_parameterize(circle_function)
 
         num_point_out_circle = 2
@@ -614,6 +637,11 @@ class TrackGenerator:
                 if i > 0.8 * maxrange and not recursed:
                     # Very big turn, we don't like that!
                     # We'll just turn the other way instead
+                    # points_out = full_circle_points[:i]
+                    # out=list(zip(*points_out))
+                    # plt.plot(out[0], out[1])
+                    # plt.show()
+                    print('recursed')
 
                     return TrackGenerator.add_refocus(
                         point_in,
@@ -638,12 +666,14 @@ class TrackGenerator:
 
                 tangent_angle_diff = cap_angle(
                     cur_tangent_out_angle)-cap_angle(target_tangent_out_angle)
-                if abs(tangent_angle_diff) < 0.08:
+                if abs(tangent_angle_diff) < 0.2:
                     num_point_out_circle = i+1
                     break
 
         points_out = full_circle_points[:num_point_out_circle]
-
+        # out=list(zip(*points_out))
+        # plt.plot(out[0], out[1])
+        # plt.show()
         normal_out = normalize_vec((
             points_out[-1][0] - center[0],
             points_out[-1][1] - center[1]
