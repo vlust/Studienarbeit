@@ -21,17 +21,110 @@ class TrackGenerator:
     PROPABILITY_RAND_TRACK = 1.00
     PROPABILITY_EMPTY_TRACK = 0.00
 
+    FUZZ_RADIUS = 10
+
     ################################################################
     # MAKRO GENERATOR FUNCTIONS
     ################################################################
-    def generate_to_next_checkpoint():
+    def generate_to_next_checkpoint(point_in, point_out,tangent_in,tangent_out, depth):
         """
         Generates track components to next checkpoint.
 
         Input: point_in/out, tangent_in/out
-        
+
         Output: points_out, tangent_out, normal_out, added_length
         """
+        added_length = 0
+        components = []
+
+        # We start out by refocusing ourselves towards point_out.
+        (points_out, tangent_out, normal_out, delta_length) = (
+                TrackGenerator.add_refocus()(
+                        point_in,
+                        point_out,
+                        tangent_in,
+                        normal_in,
+                )
+        )
+        added_length += delta_length
+        #register_output(components, points_out)
+
+        # Prepare data for next component
+        point_in = points_out[-1]
+        tangent_in = tangent_out
+        normal_in = normal_out
+
+        # Now we want to know how close we are to the goal - if we're close enough
+        # to just directly draw a straight path to it.
+        distance_from_end = get_distance(point_in, point_out)
+        if distance_from_end <= TrackGenerator.MAX_STRAIGHT + TrackGenerator.FUZZ_RADIUS:
+                straight_length = min(distance_from_end, TrackGenerator.MAX_STRAIGHT)
+                (points_out, tangent_out, normal_out, delta_length) = TrackGenerator.add_straight()(
+                        point_in,
+                        tangent_in,
+                        normal_in,
+                        straight_length
+                )
+                added_length += delta_length
+                #register_output(components, points_out)
+
+        # If we are far away from the goal, we want to get closer to it in a
+        # "random" way to create variance in the track.
+        else:
+                # We'll start by just going as far as we can to the goal.
+                # Unless we're very close, then we only go half as far to
+                # give us some space (and add variance)
+                if distance_from_end <= (TrackGenerator.MAX_STRAIGHT * 1.2):
+                        straight_length = TrackGenerator.MAX_STRAIGHT
+                else:
+                        straight_length = TrackGenerator.MAX_STRAIGHT/2
+                (points_out, tangent_out, normal_out, delta_length) = TrackGenerator.add_straight()()(
+                        point_in,
+                        tangent_in,
+                        normal_in,
+                        straight_length
+                )
+                added_length += delta_length
+                #register_output(components, points_out)
+
+                # Prepare data for next component
+                point_in = points_out[-1]
+                tangent_in = tangent_out
+                normal_in = normal_out
+
+                (points_out, tangent_out, normal_out, delta_length) = (
+                        TrackGenerator.rand_trackelements(
+                                point_in,
+                                tangent_in,
+                                normal_in
+                        )
+                )
+                added_length += delta_length
+                #register_output(components, points_out)
+
+                # Prepare data for next component
+                point_in = points_out[-1]
+                tangent_in = tangent_out
+                normal_in = normal_out
+
+                # Now, we recurse
+                if depth > 0:
+                        (comps, tangent_out, normal_out, delta_length) = (
+                                TrackGenerator.generate_to_next_checkpoint(
+                                        point_in,
+                                        point_out,
+                                        tangent_in,
+                                        normal_in,
+                                        TrackGenerator.FUZZ_RADIUS,
+                                        depth=depth - 1,
+                                )
+                        )
+                        added_length += delta_length
+                        components.extend(comps)
+
+        return (components, tangent_out, normal_out, added_length)
+
+
 
     def generate_random_local_track():
         """
@@ -361,6 +454,26 @@ class TrackGenerator:
 
         # Returns a list of points and the new edge of the racetrack and the change in length
         return (points_out, normalize_vec(tangent_out), normalize_vec(normal_out))
+
+    def add_refocus(point_in,
+                   point_out,
+                   tangent_in,
+                   tangent_out,
+                   params={}
+                   ):
+        """
+        Refocuses track towards next checkpoint.
+        """
+        r = uniform(30, 50)
+        # POINT_UT FROM ALPHA
+        
+        newTan = 21 # direction towards point out
+        point_out = (point_in[0]+newTan[0]*r,
+                     point_in[1]+newTan[1]*r)  # move by r
+
+        tangent_out = 22
+
+        return TrackGenerator.add_bezier(point_in, point_out, tangent_in, tangent_out)
 
     #####################################
     # FUNCTIONS IN PARAMETER FORM
