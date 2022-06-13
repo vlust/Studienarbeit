@@ -72,6 +72,13 @@ def deg_to_rad(deg):
     rad = np.pi*deg/180
     return rad
 
+def cap_angle(ang):
+        """Returns angle between 0 and 2*math.pi"""
+        if ang < 0:
+                return cap_angle(ang + 2 * np.pi)
+        elif ang >= 2*np.pi:
+                return cap_angle(ang - 2 * np.pi)
+        return ang
 
 def calculate_tangent_angle(xys):
     """
