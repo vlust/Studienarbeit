@@ -18,7 +18,7 @@ class TrackGenerator:
     MAX_CONSTANT_TURN = 45
     MAX_TRACK_LENGTH = 1000
     MAX_ELEMENTS = 2
-    PROPABILITY_NO_RAND_CONE = 0.3
+    PROPABILITY_NO_RAND_CONE = 1
     PROPABILITY_RAND_TRACK = 1.00
     PROPABILITY_EMPTY_TRACK = 0.00
 
@@ -37,7 +37,7 @@ class TrackGenerator:
 
         # We start with a small linear
         # initial_tangent = normalize_vec((uniform(-1, 1), uniform(-1, 1)))
-        initial_tangent = normalize_vec((1, -0.5))
+        initial_tangent = normalize_vec((1, 0.3))
 
         tangent_in = initial_tangent
         point_in = start_point
@@ -62,7 +62,7 @@ class TrackGenerator:
         # This controls how much it tries to salvage a bad run
         # It turns out that most times it fails, its not salvageable,
         # so I set it to 1 so that as soon as it fails it scraps the run.
-        max_fails = 3
+        max_fails = 5
         fails = 0
 
         print('goal points created')
@@ -383,6 +383,7 @@ class TrackGenerator:
 
         finished = False  # last track element?
         if newElement:
+            print("new_element")
             functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_constant_turn]
                          #TrackGenerator.add_straight,
             i = choice(range(len(functions)))
@@ -390,6 +391,7 @@ class TrackGenerator:
                 functions)[i](point_in, tangent_in, normal_in)
             track_element = i
         else:
+            print("not new_element")
             functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_straight,
                          TrackGenerator.add_constant_turn, TrackGenerator.add_empty_element]
             i = choice(range(len(functions)))
@@ -666,7 +668,7 @@ class TrackGenerator:
 
                 tangent_angle_diff = cap_angle(
                     cur_tangent_out_angle)-cap_angle(target_tangent_out_angle)
-                if abs(tangent_angle_diff) < 0.3:
+                if abs(tangent_angle_diff) < 0.5:
                     num_point_out_circle = i+1
                     break
 
@@ -743,7 +745,7 @@ class TrackGenerator:
             false_element = 1
 
         # How close can cones be from those on the same side.
-        min_cone_distance_sameSide = 4
+        min_cone_distance_sameSide = 5
 
         cone_cross_closeness_parameter = cone_normal_distance * 3 / 4 - 1
 
