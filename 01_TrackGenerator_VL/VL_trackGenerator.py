@@ -13,16 +13,16 @@ class TrackGenerator:
     FIDELITY = 300
     TRACK_WIDTH = 3.5
     MIN_STRAIGHT = 5
-    MAX_STRAIGHT = 80
+    MAX_STRAIGHT = 50
     MIN_CONSTANT_TURN = 10
     MAX_CONSTANT_TURN = 45
-    MAX_TRACK_LENGTH = 1500
+    MAX_TRACK_LENGTH = 1000
     MAX_ELEMENTS = 2
     PROPABILITY_NO_RAND_CONE = 0.3
     PROPABILITY_RAND_TRACK = 1.00
     PROPABILITY_EMPTY_TRACK = 0.00
 
-    FUZZ_RADIUS = 10
+    FUZZ_RADIUS = 30
 
     ################################################################
     # MAKRO GENERATOR FUNCTIONS
@@ -100,7 +100,7 @@ class TrackGenerator:
                 viable = TrackGenerator.check_if_viable(short_points, 0, 1)
                 # if not TrackGenerator.check_if_viable(total_points, 0, 1):
 
-                #     # Generation failed test, undo last bit
+                # Generation failed test, undo last bit
                 if not viable:
                     fails += 1
                     total_points = prev_points
@@ -243,7 +243,7 @@ class TrackGenerator:
 
             # Now, we recurse
             if depth > 0:
-                comps, tangent_out, normal_out = (
+                points_out, tangent_out, normal_out = (
                     TrackGenerator.generate_to_next_checkpoint(
                         all_points_out,
                         point_out,
@@ -251,9 +251,9 @@ class TrackGenerator:
                         depth=depth - 1,
                     )
                 )
+                #all_points_out.extend(points_out[1:])
                 
                 
-
         return all_points_out, tangent_out, normal_out
 
     def generate_random_local_track():
@@ -383,8 +383,8 @@ class TrackGenerator:
 
         finished = False  # last track element?
         if newElement:
-            functions = [TrackGenerator.add_random_Bezier,
-                         TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
+            functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_constant_turn]
+                         #TrackGenerator.add_straight,
             i = choice(range(len(functions)))
             data_out, tangent_out, normal_out = (
                 functions)[i](point_in, tangent_in, normal_in)
@@ -666,7 +666,7 @@ class TrackGenerator:
 
                 tangent_angle_diff = cap_angle(
                     cur_tangent_out_angle)-cap_angle(target_tangent_out_angle)
-                if abs(tangent_angle_diff) < 0.2:
+                if abs(tangent_angle_diff) < 0.3:
                     num_point_out_circle = i+1
                     break
 
@@ -753,6 +753,17 @@ class TrackGenerator:
 
         # This is used to check if the yellow and blue cones suddenly swapped.
         last_tangent_normal = (0, 0)
+        
+        #Append Start cones:
+
+        start_cones=[(0.2,-TrackGenerator.TRACK_WIDTH),(-0.2,-TrackGenerator.TRACK_WIDTH),(0.2,TrackGenerator.TRACK_WIDTH),(-0.2,TrackGenerator.TRACK_WIDTH)]
+        all_points_aSide.append((start_cones[0][0],start_cones[1][1]))
+        all_points_bSide.append((start_cones[2][0],start_cones[3][1]))
+        to_return.append((start_cones[0][0], start_cones[0][1], 3, false_element))
+        to_return.append((start_cones[1][0], start_cones[1][1], 3, false_element))
+        to_return.append((start_cones[2][0], start_cones[2][1], 3, false_element))
+        to_return.append((start_cones[3][0], start_cones[3][1], 3, false_element))
+
 
         for i in range(len(xys)):
             # Skip first
@@ -947,13 +958,12 @@ class TrackGenerator:
     def visualize_all(trackdata, conedata):
         #   sort track data
         x, y = TrackGenerator.visualize_track(trackdata)
-        yellow_x, yellow_y, blue_x, blue_y = TrackGenerator.visualize_cones(
+        yellow_x, yellow_y, blue_x, blue_y, orange_x, orange_y = TrackGenerator.visualize_cones(
             conedata)
-
         plt.plot(x, y)
         plt.plot(yellow_x, yellow_y, '*', color='orange')
         plt.plot(blue_x, blue_y, '*', color='blue')
-
+        plt.plot(orange_x, orange_y, '*', color='red')
         plt.axis('scaled')
         plt.show()
 
@@ -969,16 +979,20 @@ class TrackGenerator:
     def visualize_cones(conedata):
         yellow_cones = [x for x in conedata if x[2] == 1]
         blue_cones = [x for x in conedata if x[2] == 2]
+        orange_cones = [x for x in conedata if x[2] == 3]
+        
         yellow_x, yellow_y, _, _ = map(list, zip(*yellow_cones))
         blue_x, blue_y, _, _ = map(list, zip(*blue_cones))
+        orange_x, orange_y, _, _ = map(list, zip(*orange_cones))
 
-        return yellow_x, yellow_y, blue_x, blue_y
+        return yellow_x, yellow_y, blue_x, blue_y, orange_x, orange_y
 
     def show_cones(conedata):
-        yellow_x, yellow_y, blue_x, blue_y = TrackGenerator.visualize_cones(
+        yellow_x, yellow_y, blue_x, blue_y ,orange_x, orange_y= TrackGenerator.visualize_cones(
             conedata)
         plt.plot(yellow_x, yellow_y, '*', color='orange')
         plt.plot(blue_x, blue_y, '*', color='blue')
+        plt.plot(orange_x, orange_y, '*', color='red')
         plt.axis('scaled')
         plt.show()
 
