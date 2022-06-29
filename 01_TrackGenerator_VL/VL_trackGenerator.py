@@ -65,7 +65,7 @@ class TrackGenerator:
         max_fails = 5
         fails = 0
 
-        print('goal points created')
+        print('\tgoal points created')
         viable = False
 
         # And now we generate towards each goal point
@@ -73,7 +73,7 @@ class TrackGenerator:
             viable=False
             fails=0
             while not viable:
-                print(goal_point)
+                
                 prev_points = total_points
 
                 # Prepare inputs
@@ -95,8 +95,8 @@ class TrackGenerator:
 
                 # Now let's do early-checking for overlaps
                 short_points=[p for i, p in enumerate(total_points) if (i%10==9)]
-                print(len(total_points))
-                print(len(short_points))
+                
+                
                 viable = TrackGenerator.check_if_viable(short_points, 0, 1)
                 # if not TrackGenerator.check_if_viable(total_points, 0, 1):
 
@@ -104,16 +104,14 @@ class TrackGenerator:
                 if not viable:
                     fails += 1
                     total_points = prev_points
-                    print('not viable')
+                    print('\t\tadded track part not viable')
 
                 if fails == max_fails:
-                    print('FAILED DUE TO MAX FAILED')
+                    print('FAILED DUE TO MAX_FAILED')
                     return (total_points,goal_points, False, (0,0))
                     
-        print('where out!!!')
-        # Now lets head back to the start:
-        # We're gonna set a checkpoint that is close but not exactly the start point
-        # so that we have breathing room for the final manouever:
+
+        #head back to staart with little spac to readjust the end cleanly
         directing_point = (start_point[0] - TrackGenerator.MAX_STRAIGHT * 0.5,
                            start_point[1] + TrackGenerator.MAX_CONSTANT_TURN * 2)
 
@@ -132,7 +130,7 @@ class TrackGenerator:
         )
         total_points.extend(points_out[1:])
 
-        # Now we will add a circle to point directly away from start point
+        # adding bezie rdirectly to the beginning
         tangent_in = tangent_out
         normal_in = normal_out
         point_in = points_out[-1]
@@ -383,7 +381,6 @@ class TrackGenerator:
 
         finished = False  # last track element?
         if newElement:
-            print("new_element")
             functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_constant_turn]
                          #TrackGenerator.add_straight,
             i = choice(range(len(functions)))
@@ -391,7 +388,7 @@ class TrackGenerator:
                 functions)[i](point_in, tangent_in, normal_in)
             track_element = i
         else:
-            print("not new_element")
+
             functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_straight,
                          TrackGenerator.add_constant_turn, TrackGenerator.add_empty_element]
             i = choice(range(len(functions)))
@@ -443,7 +440,7 @@ class TrackGenerator:
             tangent_in, point_in, length)
         tangent_out = tangent_in
         normal_out = normal_in
-        #added_length = length
+
 
         return (
             TrackGenerator.de_parameterize(straight_func),
@@ -573,19 +570,16 @@ class TrackGenerator:
             point_in, center, turn_angle)
         points_out = TrackGenerator.de_parameterize(circle_function)
 
-        # Calculate total length
-        # added_length = turn_angle * radius
-
         # Now we want to find the new normal vector,
         normal_out = normalize_vec((
             points_out[-1][0] - center[0],
             points_out[-1][1] - center[1]
         ))
 
-        # And finally recalculate the tangent:
+        # calc new tangent
         tangent_out = calculate_tangent_vector(points_out)
 
-        # Returns a list of points and the new edge of the racetrack and the change in length
+        # Returns a list of points and the new edge of the racetrack 
         return (points_out, normalize_vec(tangent_out), normalize_vec(normal_out))
 
     def add_refocus(point_in,
@@ -613,7 +607,7 @@ class TrackGenerator:
                 TrackGenerator.MIN_CONSTANT_TURN,
                 (TrackGenerator.MAX_CONSTANT_TURN-TrackGenerator.MIN_CONSTANT_TURN)/3
             )
-        print(f'NORMAL{normal_in}')
+        
         if "recursed" in params:
             recursed = params["recursed"]
         else:
@@ -637,13 +631,8 @@ class TrackGenerator:
         for i in range(maxrange):
             if i != 0:
                 if i > 0.8 * maxrange and not recursed:
-                    # Very big turn, we don't like that!
-                    # We'll just turn the other way instead
-                    # points_out = full_circle_points[:i]
-                    # out=list(zip(*points_out))
-                    # plt.plot(out[0], out[1])
-                    # plt.show()
-                    print('recursed')
+                    # wrong direction => turn other way since the turn was to long => track will intersect itself
+                    #     
 
                     return TrackGenerator.add_refocus(
                         point_in,
@@ -673,9 +662,6 @@ class TrackGenerator:
                     break
 
         points_out = full_circle_points[:num_point_out_circle]
-        # out=list(zip(*points_out))
-        # plt.plot(out[0], out[1])
-        # plt.show()
         normal_out = normalize_vec((
             points_out[-1][0] - center[0],
             points_out[-1][1] - center[1]
