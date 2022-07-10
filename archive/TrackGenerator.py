@@ -1772,7 +1772,6 @@ def generic_left_right_turn(point_in,
         point_in = points_out[-1]
         tangent_in = tangent_out
         normal_in = normal_out
-
         # And now let's add another circle turning the other way
         # so that we make the track more "winding".
         (points_out, tangent_out, normal_out, delta_length) = (

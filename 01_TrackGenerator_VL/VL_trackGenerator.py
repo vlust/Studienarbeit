@@ -1,3 +1,4 @@
+from pickle import NONE
 from tkinter import FALSE
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,23 +10,251 @@ import time
 
 
 class TrackGenerator:
-    FIDELITY = 50
+    FIDELITY = 300
     TRACK_WIDTH = 3.5
     MIN_STRAIGHT = 5
-    MAX_STRAIGHT = 80
+    MAX_STRAIGHT = 50
     MIN_CONSTANT_TURN = 10
     MAX_CONSTANT_TURN = 45
-    MAX_TRACK_LENGTH = 105
+    MAX_TRACK_LENGTH = 1000
     MAX_ELEMENTS = 2
-    PROPABILITY_NO_RAND_CONE = 0.3
+    PROPABILITY_NO_RAND_CONE = 1
     PROPABILITY_RAND_TRACK = 1.00
     PROPABILITY_EMPTY_TRACK = 0.00
+
+    FUZZ_RADIUS = 30
 
     ################################################################
     # MAKRO GENERATOR FUNCTIONS
     ################################################################
+    def generate_random_track(start_point):
+        """
+        Generates a random track given a starting point.
+        """
+        # reset_counts()
+        #total_length = 0
+        total_points = []
 
-    def generate_randomTrack():
+        # We start with a small linear
+        # initial_tangent = normalize_vec((uniform(-1, 1), uniform(-1, 1)))
+        initial_tangent = normalize_vec((1, 0.3))
+
+        tangent_in = initial_tangent
+        point_in = start_point
+        normal_in = get_normal_vector(tangent_in)
+        points_out, tangent_out, normal_out = TrackGenerator.add_straight(
+            point_in,
+            tangent_in,
+            normal_in,
+            {'length':TrackGenerator.MIN_STRAIGHT}
+        )
+        total_points.extend(points_out[1:])
+
+
+        # Now we want to set checkpoints to pass through:
+        goal_points = [(start_point[0] + TrackGenerator.MAX_TRACK_LENGTH * 0.08,
+                        start_point[1]),
+                       (start_point[0] + TrackGenerator.MAX_TRACK_LENGTH * 0.12,
+                        start_point[1] + TrackGenerator.MAX_TRACK_LENGTH * 0.08),
+                       (start_point[0] - TrackGenerator.MAX_TRACK_LENGTH * 0.03,
+                        start_point[1] + TrackGenerator.MAX_TRACK_LENGTH * 0.12)]
+
+        # This controls how much it tries to salvage a bad run
+        # It turns out that most times it fails, its not salvageable,
+        # so I set it to 1 so that as soon as it fails it scraps the run.
+        max_fails = 5
+        fails = 0
+
+        print('\tgoal points created')
+        viable = False
+
+        # And now we generate towards each goal point
+        for goal_point in goal_points:
+            viable=False
+            fails=0
+            while not viable:
+                
+                prev_points = total_points
+
+                # Prepare inputs
+                tangent_in = tangent_out
+                normal_in = normal_out
+                point_out = goal_point
+                point_in = points_out[-1]
+
+                # Generate from point to point
+                points_out, tangent_out, normal_out  = TrackGenerator.generate_to_next_checkpoint(
+                    [point_in],
+                    point_out,
+                    tangent_in,
+                    20
+                )
+
+                # This grabs the last component's points.
+                total_points.extend(points_out[1:])
+
+                # Now let's do early-checking for overlaps
+                short_points=[p for i, p in enumerate(total_points) if (i%10==9)]
+                
+                
+                viable = TrackGenerator.check_if_viable(short_points, 0, 1)
+                # if not TrackGenerator.check_if_viable(total_points, 0, 1):
+
+                # Generation failed test, undo last bit
+                if not viable:
+                    fails += 1
+                    total_points = prev_points
+                    print('\t\tadded track part not viable')
+
+                if fails == max_fails:
+                    print('FAILED DUE TO MAX_FAILED')
+                    return (total_points,goal_points, False, (0,0))
+                    
+
+        #head back to staart with little spac to readjust the end cleanly
+        directing_point = (start_point[0] - TrackGenerator.MAX_STRAIGHT * 0.5,
+                           start_point[1] + TrackGenerator.MAX_CONSTANT_TURN * 2)
+
+        # Prepare inputs
+        tangent_in = tangent_out
+        normal_in = normal_out
+        point_out = directing_point
+        point_in = points_out[-1]
+
+        # Generate from point to point
+        points_out, tangent_out, normal_out= TrackGenerator.generate_to_next_checkpoint(
+            [point_in],
+            point_out,
+            tangent_in,
+            2
+        )
+        total_points.extend(points_out[1:])
+
+        # adding bezie rdirectly to the beginning
+        tangent_in = tangent_out
+        normal_in = normal_out
+        point_in = points_out[-1]
+        tangent_out = initial_tangent
+
+        points_out, tangent_out, normal_out = TrackGenerator.add_bezier(
+            point_in,
+            start_point,
+            tangent_in,
+            tangent_out,
+        )
+        total_points.extend(points_out[1:])
+
+        # Sometimes the tangents don't actually match up
+        # so if that happens, we throw out the track and start a new.
+        if get_distance(initial_tangent, tangent_out) > 0.01:
+            return TrackGenerator.generate_random_track(start_point)
+
+        
+
+        return total_points, goal_points, True, directing_point
+
+    def generate_to_next_checkpoint(points_in, point_out, tangent_in, depth):
+        """
+        Generates track components to next checkpoint.
+
+        Input: point_in/out, tangent_in, depth
+
+        Output: points_out, tangent_out, normal_out, added_length
+        """
+
+        all_points_out=points_in
+        point_in=all_points_out[-1]
+        
+        normal_in = get_normal_vector(tangent_in)
+
+        # We start out by refocusing ourselves towards point_out.
+        points_out, tangent_out, normal_out = (
+            TrackGenerator.add_refocus(
+                point_in,
+                point_out,
+                tangent_in,
+                normal_in, 
+            )
+        )
+        all_points_out.extend(points_out[1:])
+        #added_length += delta_length
+        #register_output(components, points_out)
+
+        # Prepare data for next component
+        point_in = points_out[-1]
+        tangent_in = tangent_out
+        normal_in = normal_out
+
+        # Now we want to know how close we are to the goal - if we're close enough
+        # to just directly draw a straight path to it.
+        distance_from_end = get_distance(point_in, point_out)
+        if distance_from_end <= TrackGenerator.MAX_STRAIGHT + TrackGenerator.FUZZ_RADIUS:
+            straight_length = min(
+                distance_from_end, TrackGenerator.MAX_STRAIGHT)
+            points_out, tangent_out, normal_out = TrackGenerator.add_straight(
+                point_in,
+                tangent_in,
+                normal_in,
+                {'length':straight_length}
+            )
+            all_points_out.extend(points_out[1:])
+            #register_output(components, points_out)
+
+        # If we are far away from the goal, we want to get closer to it in a
+        # "random" way to create variance in the track.
+        else:
+            # We'll start by just going as far as we can to the goal.
+            # Unless we're very close, then we only go half as far to
+            # give us some space (and add variance)
+            if distance_from_end <= (TrackGenerator.MAX_STRAIGHT * 1.2):
+                straight_length = TrackGenerator.MAX_STRAIGHT
+            else:
+                straight_length = TrackGenerator.MAX_STRAIGHT/2
+            points_out, tangent_out, normal_out = TrackGenerator.add_straight(
+                point_in,
+                tangent_in,
+                normal_in,
+                {'length':straight_length}
+            )
+            all_points_out.extend(points_out[1:])
+            #register_output(components, points_out)
+
+            # Prepare data for next component
+            point_in = points_out[-1]
+            tangent_in = tangent_out
+            normal_in = normal_out
+
+            points_out, tangent_out, normal_out ,_,_= (
+                TrackGenerator.add_random_trackelement(
+                    point_in,
+                    tangent_in,
+                    normal_in
+                )
+            )
+            all_points_out.extend(points_out[1:])
+            #register_output(components, points_out)
+
+            # Prepare data for next component
+            point_in = points_out[-1]
+            tangent_in = tangent_out
+            normal_in = normal_out
+
+            # Now, we recurse
+            if depth > 0:
+                points_out, tangent_out, normal_out = (
+                    TrackGenerator.generate_to_next_checkpoint(
+                        all_points_out,
+                        point_out,
+                        tangent_in,
+                        depth=depth - 1,
+                    )
+                )
+                #all_points_out.extend(points_out[1:])
+                
+                
+        return all_points_out, tangent_out, normal_out
+
+    def generate_random_local_track():
         """
         generates random track with max amount of TrackGenerator.MAX_ELEMENTS track elements
         """
@@ -58,7 +287,7 @@ class TrackGenerator:
                 break  # generation finished due to max number of elements
             cur_track_data = track_data.copy()
 
-            data_out, tangent_out, normal_out, finished, elementType = TrackGenerator.randomElement(
+            data_out, tangent_out, normal_out, finished, elementType = TrackGenerator.add_random_trackelement(
                 point_in, tangent_in, normal_in, failedElement)
 
             if finished:
@@ -86,7 +315,7 @@ class TrackGenerator:
             max_xy = max(max(track_data, key=lambda i: i[0])[0], max(
                 track_data, key=lambda i: i[1])[1], key=abs)  # get max xy value
 
-            false_element, failed = TrackGenerator.not_connected_track_element(
+            false_element, failed = TrackGenerator.add_not_connected_track_element(
                 max_xy, track_data)
             if not failed:
                 false_cones = TrackGenerator.get_cones(
@@ -96,7 +325,7 @@ class TrackGenerator:
         conedata = [x for x in conedata if x[0] >= 0]
         return track_data, conedata, elementList, False
 
-    def not_connected_track_element(max_xy, track):
+    def add_not_connected_track_element(max_xy, track):
         # new point anywhere in range of track
 
         to_check = []
@@ -129,7 +358,7 @@ class TrackGenerator:
                 failed = True
                 break
 
-            rand_track, _, _ = TrackGenerator.random_Bezier(
+            rand_track, _, _ = TrackGenerator.add_random_Bezier(
                 point_out, scale_vector(tangent_out, -1), 1)
             to_check = track.copy()
             to_check.extend(rand_track)
@@ -141,7 +370,7 @@ class TrackGenerator:
 
         return rand_track[::-1], failed
 
-    def randomElement(point_in, tangent_in, normal_in, newElement=None):
+    def add_random_trackelement(point_in, tangent_in, normal_in, newElement=None):
         """
         Adds new random Track element (if newElement is TRUE then empty track element is not an option)
         """
@@ -152,15 +381,16 @@ class TrackGenerator:
 
         finished = False  # last track element?
         if newElement:
-            functions = [TrackGenerator.random_Bezier,
-                         TrackGenerator.add_straight, TrackGenerator.add_constant_turn]
+            functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_constant_turn]
+                         #TrackGenerator.add_straight,
             i = choice(range(len(functions)))
             data_out, tangent_out, normal_out = (
                 functions)[i](point_in, tangent_in, normal_in)
             track_element = i
         else:
-            functions = [TrackGenerator.random_Bezier, TrackGenerator.add_straight,
-                         TrackGenerator.add_constant_turn, TrackGenerator.emptyElement]
+
+            functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_straight,
+                         TrackGenerator.add_constant_turn, TrackGenerator.add_empty_element]
             i = choice(range(len(functions)))
             data_out, tangent_out, normal_out = (
                 functions)[i](point_in, tangent_in, normal_in)
@@ -176,14 +406,14 @@ class TrackGenerator:
         checks if added track element is viable
         """
         doubleStraight = newElement == lastElement == 1
-        return not TrackGenerator.intersectsWithSelf(toCheck_track_data) and not doubleStraight
+        return (not TrackGenerator.intersectsWithSelf(toCheck_track_data)) and (not doubleStraight)
 
     ################################################################
     # TRACKELEMENT FUNCTIONS
     ################################################################
-    def emptyElement(point_in,
-                     tangent_in,
-                     normal_in):
+    def add_empty_element(point_in,
+                          tangent_in,
+                          normal_in):
         return None, tangent_in, normal_in
 
     def add_straight(point_in,
@@ -210,7 +440,7 @@ class TrackGenerator:
             tangent_in, point_in, length)
         tangent_out = tangent_in
         normal_out = normal_in
-        #added_length = length
+
 
         return (
             TrackGenerator.de_parameterize(straight_func),
@@ -265,7 +495,7 @@ class TrackGenerator:
             normalize_vec(normal_out)
         )
 
-    def random_Bezier(point_in, tangent_in, normal_in):
+    def add_random_Bezier(point_in, tangent_in, normal_in):
         """
         creates random beziew element with point on arc with random degree alpha and random distance r and random output tangent beta.
         """
@@ -334,13 +564,11 @@ class TrackGenerator:
             tangent_in[0] * normal_in[1] - tangent_in[1] * normal_in[0])
         turn_angle = handedness * circle_percent * np.pi * 2
 
+
         # And now grab output points
         circle_function = TrackGenerator.parametric_circle(
             point_in, center, turn_angle)
         points_out = TrackGenerator.de_parameterize(circle_function)
-
-        # Calculate total length
-        #added_length = turn_angle * radius
 
         # Now we want to find the new normal vector,
         normal_out = normalize_vec((
@@ -348,11 +576,99 @@ class TrackGenerator:
             points_out[-1][1] - center[1]
         ))
 
-        # And finally recalculate the tangent:
+        # calc new tangent
         tangent_out = calculate_tangent_vector(points_out)
 
-        # Returns a list of points and the new edge of the racetrack and the change in length
+        # Returns a list of points and the new edge of the racetrack 
         return (points_out, normalize_vec(tangent_out), normalize_vec(normal_out))
+
+    def add_refocus(point_in,
+                    point_out,
+                    tangent_in,
+                    params={}
+                    ):
+        """
+        Refocuses track towards next checkpoint.
+
+        returns: points_out, tangent_out, normal_out
+
+        """
+        normal_in = get_normal_vector(tangent_in)
+
+        # Load in params
+        
+        if "turn_against_normal" in params:
+                normal_in = scale_vector(normal_in, -1)
+
+        if "radius" in params:
+            radius = params["radius"]
+        else:
+            radius = uniform(
+                TrackGenerator.MIN_CONSTANT_TURN,
+                (TrackGenerator.MAX_CONSTANT_TURN-TrackGenerator.MIN_CONSTANT_TURN)/3
+            )
+        
+        if "recursed" in params:
+            recursed = params["recursed"]
+        else:
+            recursed = False
+        center = add_vectors(point_in, scale_vector(normal_in, radius))
+                # je nach Orientierung des Tracks muss die Richtung der gezeichneten Kreise geändert werden
+        def sgn(x):
+            """-1 if x is negative, +1 if positive, 0 if 0."""
+            return -1 if x < 0 else 1 if x > 0 else 0
+        handedness = sgn(
+            tangent_in[0] * normal_in[1] - tangent_in[1] * normal_in[0])
+        turn_angle = handedness * 1 * np.pi * 2
+
+        # And now grab output points
+        circle_function = TrackGenerator.parametric_circle(
+            point_in, center, turn_angle)
+        full_circle_points = TrackGenerator.de_parameterize(circle_function)
+
+        num_point_out_circle = 2
+        maxrange = len(full_circle_points)
+        for i in range(maxrange):
+            if i != 0:
+                if i > 0.8 * maxrange and not recursed:
+                    # wrong direction => turn other way since the turn was to long => track will intersect itself
+                    #     
+
+                    return TrackGenerator.add_refocus(
+                        point_in,
+                        point_out,
+                        tangent_in,
+                        params={
+                            "recursed": True,
+                            "radius": radius,
+                            "turn_against_normal": True
+                        }
+                    )
+
+                cur_points_out = (full_circle_points[:i+1])
+
+                cur_tangent_out_angle = calculate_tangent_angle(cur_points_out)
+
+                target_tangent_out = (
+                    (point_out[0]-cur_points_out[-1][0], point_out[1]-cur_points_out[-1][1]))
+
+                target_tangent_out_angle = np.arctan2(
+                    target_tangent_out[1], target_tangent_out[0])
+
+                tangent_angle_diff = cap_angle(
+                    cur_tangent_out_angle)-cap_angle(target_tangent_out_angle)
+                if abs(tangent_angle_diff) < 0.5:
+                    num_point_out_circle = i+1
+                    break
+
+        points_out = full_circle_points[:num_point_out_circle]
+        normal_out = normalize_vec((
+            points_out[-1][0] - center[0],
+            points_out[-1][1] - center[1]
+        ))
+        tangent_out = calculate_tangent_vector(points_out)
+
+        return points_out, tangent_out, normal_out
 
     #####################################
     # FUNCTIONS IN PARAMETER FORM
@@ -415,7 +731,7 @@ class TrackGenerator:
             false_element = 1
 
         # How close can cones be from those on the same side.
-        min_cone_distance_sameSide = 4
+        min_cone_distance_sameSide = 5
 
         cone_cross_closeness_parameter = cone_normal_distance * 3 / 4 - 1
 
@@ -425,6 +741,17 @@ class TrackGenerator:
 
         # This is used to check if the yellow and blue cones suddenly swapped.
         last_tangent_normal = (0, 0)
+        
+        #Append Start cones:
+
+        start_cones=[(0.2,-TrackGenerator.TRACK_WIDTH),(-0.2,-TrackGenerator.TRACK_WIDTH),(0.2,TrackGenerator.TRACK_WIDTH),(-0.2,TrackGenerator.TRACK_WIDTH)]
+        all_points_aSide.append((start_cones[0][0],start_cones[1][1]))
+        all_points_bSide.append((start_cones[2][0],start_cones[3][1]))
+        to_return.append((start_cones[0][0], start_cones[0][1], 3, false_element))
+        to_return.append((start_cones[1][0], start_cones[1][1], 3, false_element))
+        to_return.append((start_cones[2][0], start_cones[2][1], 3, false_element))
+        to_return.append((start_cones[3][0], start_cones[3][1], 3, false_element))
+
 
         for i in range(len(xys)):
             # Skip first
@@ -619,13 +946,12 @@ class TrackGenerator:
     def visualize_all(trackdata, conedata):
         #   sort track data
         x, y = TrackGenerator.visualize_track(trackdata)
-        yellow_x, yellow_y, blue_x, blue_y = TrackGenerator.visualize_cones(
+        yellow_x, yellow_y, blue_x, blue_y, orange_x, orange_y = TrackGenerator.visualize_cones(
             conedata)
-
         plt.plot(x, y)
         plt.plot(yellow_x, yellow_y, '*', color='orange')
         plt.plot(blue_x, blue_y, '*', color='blue')
-
+        plt.plot(orange_x, orange_y, '*', color='red')
         plt.axis('scaled')
         plt.show()
 
@@ -641,16 +967,20 @@ class TrackGenerator:
     def visualize_cones(conedata):
         yellow_cones = [x for x in conedata if x[2] == 1]
         blue_cones = [x for x in conedata if x[2] == 2]
+        orange_cones = [x for x in conedata if x[2] == 3]
+        
         yellow_x, yellow_y, _, _ = map(list, zip(*yellow_cones))
         blue_x, blue_y, _, _ = map(list, zip(*blue_cones))
+        orange_x, orange_y, _, _ = map(list, zip(*orange_cones))
 
-        return yellow_x, yellow_y, blue_x, blue_y
+        return yellow_x, yellow_y, blue_x, blue_y, orange_x, orange_y
 
     def show_cones(conedata):
-        yellow_x, yellow_y, blue_x, blue_y = TrackGenerator.visualize_cones(
+        yellow_x, yellow_y, blue_x, blue_y ,orange_x, orange_y= TrackGenerator.visualize_cones(
             conedata)
         plt.plot(yellow_x, yellow_y, '*', color='orange')
         plt.plot(blue_x, blue_y, '*', color='blue')
+        plt.plot(orange_x, orange_y, '*', color='red')
         plt.axis('scaled')
         plt.show()
 

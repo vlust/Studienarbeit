@@ -14,8 +14,8 @@ from sklearn.utils import shuffle
 from tqdm import tqdm
 
 
-NUMBER_OF_TRACKS = 4000
-NUMBER_OF_BATCHES = 10
+NUMBER_OF_TRACKS = 20
+NUMBER_OF_BATCHES = 1
 path = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -65,10 +65,11 @@ def fill_df_zero(df):
 
 def savefig(track, cones, i):
     x, y = TrackGenerator.visualize_track(track)
-    yellow_x, yellow_y, blue_x, blue_y = TrackGenerator.visualize_cones(cones)
+    yellow_x, yellow_y, blue_x, blue_y,orange_x,orange_y = TrackGenerator.visualize_cones(cones)
     plt.plot(x, y)
     plt.plot(yellow_x, yellow_y, '*', color='orange')
     plt.plot(blue_x, blue_y, '*', color='blue')
+    plt.plot(orange_x, orange_y, '*', color='red')
     plt.axis('scaled')
     filename = f"/tracks/track#{i}.png"
     plt.savefig(path+filename)
@@ -82,7 +83,7 @@ def macro_track_to_csv(filenumber):
     counter = 0
     for i in tqdm(range(NUMBER_OF_TRACKS)):
         #t0 = time.time()
-        track, cones, elements, error = TrackGenerator.generate_randomTrack()
+        track, cones, elements, error = TrackGenerator.generate_random_local_track()
         counter += 1
         if counter == 100:
             # print(f"*********************** track for file #{filenumber+1} added {i+1} *******************************")
