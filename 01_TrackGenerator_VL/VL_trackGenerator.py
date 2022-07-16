@@ -1,5 +1,5 @@
 from pickle import NONE
-from tkinter import FALSE
+
 import numpy as np
 import matplotlib.pyplot as plt
 from utilities import *
@@ -381,8 +381,8 @@ class TrackGenerator:
 
         finished = False  # last track element?
         if newElement:
-            functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_constant_turn]
-                         #TrackGenerator.add_straight,
+            functions = [TrackGenerator.add_random_Bezier, TrackGenerator.add_constant_turn,
+                         TrackGenerator.add_straight]
             i = choice(range(len(functions)))
             data_out, tangent_out, normal_out = (
                 functions)[i](point_in, tangent_in, normal_in)
