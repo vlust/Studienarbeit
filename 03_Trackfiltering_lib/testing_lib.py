@@ -12,24 +12,39 @@ from planning_lib import *
 
 path = os.path.dirname(os.path.abspath(__file__))
 
-df = pd.read_csv(path+'/Tracks_Batch2/track#0.csv')
+df = pd.read_csv(path+'\Tracks_Batch2\\track#0.csv')
 
 plt.plot(df['x'], df['y'],'*')
-plt.show()
-print(df)
+#plt.show()
+
 left_cones = []
 right_cones = []
 for i, row in df.iterrows():
     #print(row['color'])
     #print(row.keys())
     if  row['color'] == '1':
-        left_cones.append((row['x'],row['y']))
+        x=float(row['x'])
+        y=float(row['y'])
+        left_cones.append([x,y])
+        
         #print('HERE')
     if  row['color'] == '2':
-        right_cones.append((row['x'],row['y']))
+        x=float(row['x'])
+        y=float(row['y'])
+        right_cones.append([x,y])
 
-print(left_cones)
 
-print(right_cones)
-waypoints, viz_triangles = generate_waypoints(left_cones, right_cones, True)
+# print(right_cones)
+#waypoints, viz_triangles = generate_waypoints(left_cones, right_cones, True)
+import timeit
+
+
+startTime = time.time()
+viz_triangles, spline = planning_main(left_cones, right_cones,60,True)
+endTime = time.time()
+howMuchTime = endTime - startTime
+print(str(howMuchTime) + " sec")
+# x=[point[0] for point in viz_triangles]
+# y=[point[1] for point in viz_triangles]
+# print(waypoints)
 

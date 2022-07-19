@@ -47,25 +47,31 @@ def generate_waypoints(left_cones, right_cones, draw):
     #print(coordinates)
     x = coordinates[:, 0]
     y = coordinates[:, 1]
-    print(x)
-    print(y)
+    # print(x)
+    # print(y)
     # Delauney
     tri = Delaunay(coordinates)
     triangles = tri.simplices
     waypoints = np.zeros((triangles.shape[0] * 2, 2))  # assumption: every triangle generates 2 waypoints
-    print(triangles)
-    print(waypoints)
+
+    # print(waypoints)
     no_new_waypoints = []
     viz_triangles = []
 
+
+    # left_cones = [x for xs in left_cones for x in xs]
+    # right_cones = [x for xs in right_cones for x in xs]
     for i in range(triangles.shape[0]):
         line = triangles[i]
-        element0 = coordinates[line[0]]
-        element1 = coordinates[line[1]]
-        element2 = coordinates[line[2]]
-        triangle_waypoints = []
+        element0 = list(coordinates[line[0]])
+        element1 = list(coordinates[line[1]])
+        element2 = list(coordinates[line[2]])
 
-        if element0 in left_cones and element1 in left_cones and element2 in left_cones or element0 in right_cones \
+        triangle_waypoints = []
+        # if (element0 in left_cones):
+        #     print('smth')
+
+        if element0 in left_cones and element1 in left_cones and element2 in  left_cones or element0 in right_cones \
                 and element1 in right_cones and element2 in right_cones:
             no_new_waypoints.append(i)
             no_new_waypoints.append(i + 1)
@@ -353,6 +359,7 @@ def planning_main(left_cones, right_cones, radius, plot):
         waypoints, viz_triangles = generate_waypoints(left_cones, right_cones, plot)
         # Build Tree
         tree_list = generate_tree(waypoints)
+        print(tree_list)
         # Build Catmull-Rom Spline
         points_for_catmull = []
         for i in range(len(tree_list)):
@@ -376,7 +383,7 @@ def planning_main(left_cones, right_cones, radius, plot):
         theta = np.linspace(0, 2 * np.pi, 100)
         a = radius * np.cos(theta)
         b = radius * np.sin(theta)
-        plt.plot(a, b)
+        #plt.plot(a, b)
         plt.gca().set_aspect('equal', adjustable='box')
         # Draw Lookahead Point
         # plt.plot(lookahead[0], lookahead[1], 'go', label='Lookahead Point')
