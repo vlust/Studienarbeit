@@ -6,13 +6,14 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import CubicSpline
 from scipy.spatial import Delaunay
 from scipy.spatial import distance as spatialdistance
-from velocity import Velocity
+# from velocity import Velocity
 import time
 import csv
 from datetime import datetime
 from filtering import Track_Filtering
-import helper_funcs_glob
-import trajectory_planning_helpers as tph
+import pandas as pd
+# import helper_funcs_glob
+# import trajectory_planning_helpers as tph
 
 class optimizing_Handler():
 
@@ -182,6 +183,7 @@ class optimizing_Handler():
 
             self.left_cones = left_cones
             self.right_cones = right_cones
+            self.orange_cones = orange_cones
 
             # call delauny traingulation
             self.centerline = self.Delauney(self.left_cones, self.right_cones)
@@ -224,28 +226,28 @@ class optimizing_Handler():
             # resahpe trackwidth
             self.trackwidths = self.trackwidths.reshape((-1,2))
 
-            # calculate Raceline
-            self.raceline = self.getRaceline(self.centerline, self.trackwidths)
+            # # calculate Raceline
+            # self.raceline = self.getRaceline(self.centerline, self.trackwidths)
 
-            # get spline approximation of centerline
-            reftrack_interp, self.normalvectors = self.getRaceline(self.centerline, self.trackwidths, optimize=False, regression=2)
-            self.centerline = reftrack_interp[:,:2]
-            self.trackwidths = reftrack_interp[:,2:]
+            # # get spline approximation of centerline
+            # reftrack_interp, self.normalvectors = self.getRaceline(self.centerline, self.trackwidths, optimize=False, regression=2)
+            # self.centerline = reftrack_interp[:,:2]
+            # self.trackwidths = reftrack_interp[:,2:]
 
-            # get curvature of centerlinde and raceline
-            self.centerline_curvature, x, centerline_for_velocity = self.CubicSpline(self.centerline, factor=10)
-            self.raceline_curvature, x, raceline_for_velocity = self.CubicSpline(self.raceline, factor=10)
-            #self.centerline_curvature, x, self.centerline = self.CubicSpline(self.centerline, factor=1)
-            #self.raceline_curvature, x, self.raceline = self.CubicSpline(self.raceline, factor=1)
+            # # get curvature of centerlinde and raceline
+            # self.centerline_curvature, x, centerline_for_velocity = self.CubicSpline(self.centerline, factor=10)
+            # self.raceline_curvature, x, raceline_for_velocity = self.CubicSpline(self.raceline, factor=10)
+            # #self.centerline_curvature, x, self.centerline = self.CubicSpline(self.centerline, factor=1)
+            # #self.raceline_curvature, x, self.raceline = self.CubicSpline(self.raceline, factor=1)
 
-            # get distance for centerline and raceline
-            self.centerline_distance = self.Distance(centerline_for_velocity)
-            self.raceline_distance = self.Distance(raceline_for_velocity)
-            #self.centerline_distance = self.Distance(self.centerline)
-            #self.raceline_distance = self.Distance(self.raceline)
+            # # get distance for centerline and raceline
+            # self.centerline_distance = self.Distance(centerline_for_velocity)
+            # self.raceline_distance = self.Distance(raceline_for_velocity)
+            # #self.centerline_distance = self.Distance(self.centerline)
+            # #self.raceline_distance = self.Distance(self.raceline)
 
             # return values
-            return self.raceline, self.raceline_distance, self.raceline_curvature
+            return self.centerline,self.trackwidths  #self.raceline, self.raceline_distance, self.raceline_curvature, self.trackwidths
 
 
     def Delauney(self,
@@ -293,16 +295,16 @@ class optimizing_Handler():
                 element2 = coordinates[line[2]]
 
                 # check if first and second point are both right or both left
-                if (element0 in right_cones.tolist()) and (element1 in right_cones.tolist()):
+                if (element0 in right_cones) and (element1 in right_cones):
                     pass
-                elif (element0 in left_cones.tolist()) and (element1 in left_cones.tolist()):
+                elif (element0 in left_cones) and (element1 in left_cones):
                     pass
                 else:
                     self.centerline = np.append(self.centerline, self.getWaypointCoordinate(element0, element1))
                     self.viz_triangles.append([element0, element1])
 
                     # check which point is left and right
-                    if (element0 in right_cones.tolist()):
+                    if (element0 in right_cones):
                         self.right_cones_filtered = np.append(self.right_cones_filtered, np.array(element0))
                         self.left_cones_filtered = np.append(self.left_cones_filtered, np.array(element1))
                     else:
@@ -311,16 +313,16 @@ class optimizing_Handler():
 
 
                 # check if second and third point are both right or both left
-                if (element1 in right_cones.tolist()) and (element2 in right_cones.tolist()):
+                if (element1 in right_cones) and (element2 in right_cones):
                     pass
-                elif (element1 in left_cones.tolist()) and (element2 in left_cones.tolist()):
+                elif (element1 in left_cones) and (element2 in left_cones):
                     pass
                 else:
                     self.centerline = np.append(self.centerline, self.getWaypointCoordinate(element1, element2))
                     self.viz_triangles.append([element1, element2])
 
                     # check which point is left and right
-                    if (element1 in right_cones.tolist()):
+                    if (element1 in right_cones):
                         self.right_cones_filtered = np.append(self.right_cones_filtered, np.array(element1))
                         self.left_cones_filtered = np.append(self.left_cones_filtered, np.array(element2))
                     else:
@@ -329,16 +331,16 @@ class optimizing_Handler():
 
 
                 # check if first and third point are both right or both left
-                if (element2 in right_cones.tolist()) and (element0 in right_cones.tolist()):
+                if (element2 in right_cones) and (element0 in right_cones):
                     pass
-                elif (element2 in left_cones.tolist()) and (element0 in left_cones.tolist()):
+                elif (element2 in left_cones) and (element0 in left_cones):
                     pass
                 else:
                     self.centerline = np.append(self.centerline, self.getWaypointCoordinate(element2, element0))
                     self.viz_triangles.append([element2, element0])
 
                     # check which point is left and right
-                    if (element0 in right_cones.tolist()):
+                    if (element0 in right_cones):
                         self.right_cones_filtered = np.append(self.right_cones_filtered, np.array(element0))
                         self.left_cones_filtered = np.append(self.left_cones_filtered, np.array(element2))
                     else:
@@ -407,74 +409,74 @@ class optimizing_Handler():
         # return values
         return self.left_cones, self.right_cones, self.orange_cones
 
-    def getRaceline(self,
-                    centerline,
-                    trackwidths,
-                    optimize=True,
-                    regression=120):
-        """
-            .. description::
+    # def getRaceline(self,
+    #                 centerline,
+    #                 trackwidths,
+    #                 optimize=True,
+    #                 regression=120):
+    #     """
+    #         .. description::
 
-            .. inputs::
+    #         .. inputs::
 
-            .. outputs::
-        """
+    #         .. outputs::
+    #     """
 
-        # put all arrays together. Shape: [x_m, y_m, w_tr_right_m, w_tr_left_m]
-        reftrack = np.c_[centerline, trackwidths]
+    #     # put all arrays together. Shape: [x_m, y_m, w_tr_right_m, w_tr_left_m]
+    #     reftrack = np.c_[centerline, trackwidths]
 
-        ### spline regression smooth options
-        # k_reg:                        [-] order of B-Splines -> standard: 3
-        # s_reg:                        [-] smoothing factor, range [1.0, 100.0]
+    #     ### spline regression smooth options
+    #     # k_reg:                        [-] order of B-Splines -> standard: 3
+    #     # s_reg:                        [-] smoothing factor, range [1.0, 100.0]
 
-        reg_smooth_opts={"k_reg": 3,
-                        "s_reg": regression}
+    #     reg_smooth_opts={"k_reg": 3,
+    #                     "s_reg": regression}
 
-        ### stepsize options
-        # stepsize_prep:               [m] used for linear interpolation before spline approximation
-        # stepsize_reg:                [m] used for spline interpolation after spline approximation (stepsize during opt.)
-        # stepsize_interp_after_opt:   [m] used for spline interpolation after optimization
+    #     ### stepsize options
+    #     # stepsize_prep:               [m] used for linear interpolation before spline approximation
+    #     # stepsize_reg:                [m] used for spline interpolation after spline approximation (stepsize during opt.)
+    #     # stepsize_interp_after_opt:   [m] used for spline interpolation after optimization
 
-        stepsize_opts={"stepsize_prep": 0.5,
-                    "stepsize_reg": 1.5,
-                    "stepsize_interp_after_opt": 1.0}
+    #     stepsize_opts={"stepsize_prep": 0.5,
+    #                 "stepsize_reg": 1.5,
+    #                 "stepsize_interp_after_opt": 1.0}
 
-        # create dictonary
-        pars={}
-        pars["reg_smooth_opts"] = reg_smooth_opts
-        pars["stepsize_opts"] = stepsize_opts
+    #     # create dictonary
+    #     pars={}
+    #     pars["reg_smooth_opts"] = reg_smooth_opts
+    #     pars["stepsize_opts"] = stepsize_opts
 
-        #####################################
-        #                                   #
-        #       RACELINE OPTIMIZATION       #
-        #                                   #
-        #####################################
+    #     #####################################
+    #     #                                   #
+    #     #       RACELINE OPTIMIZATION       #
+    #     #                                   #
+    #     #####################################
 
-        # use TRACK PREPERATION from TUM
-        reftrack_interp, normvec_normalized_interp, a_interp = \
-        helper_funcs_glob.src.prep_track.prep_track(reftrack_imp=reftrack,
-                                                    reg_smooth_opts=pars["reg_smooth_opts"],
-                                                    stepsize_opts=pars["stepsize_opts"],
-                                                    debug=False,
-                                                    min_width=None)[0:3]
+    #     # use TRACK PREPERATION from TUM
+    #     reftrack_interp, normvec_normalized_interp, a_interp = \
+    #     helper_funcs_glob.src.prep_track.prep_track(reftrack_imp=reftrack,
+    #                                                 reg_smooth_opts=pars["reg_smooth_opts"],
+    #                                                 stepsize_opts=pars["stepsize_opts"],
+    #                                                 debug=False,
+    #                                                 min_width=None)[0:3]
 
-        if (optimize != False):
-            # call optimization from TUM
-            alpha_opt = tph.opt_min_curv.opt_min_curv(reftrack=reftrack_interp,
-                                                normvectors=normvec_normalized_interp,
-                                                A=a_interp,
-                                                kappa_bound=self.max_curvature,
-                                                w_veh=0,
-                                                print_debug=False,
-                                                plot_debug=False)[0]
+    #     if (optimize != False):
+    #         # call optimization from TUM
+    #         alpha_opt = tph.opt_min_curv.opt_min_curv(reftrack=reftrack_interp,
+    #                                             normvectors=normvec_normalized_interp,
+    #                                             A=a_interp,
+    #                                             kappa_bound=self.max_curvature,
+    #                                             w_veh=0,
+    #                                             print_debug=False,
+    #                                             plot_debug=False)[0]
 
-            self.raceline = reftrack_interp[:,0:2] + normvec_normalized_interp * alpha_opt.reshape((-1,1))
+    #         self.raceline = reftrack_interp[:,0:2] + normvec_normalized_interp * alpha_opt.reshape((-1,1))
 
-            # return values
-            return self.raceline
+    #         # return values
+    #         return self.raceline
 
-        else:
-            return reftrack_interp, normvec_normalized_interp
+    #     else:
+    #         return reftrack_interp, normvec_normalized_interp
 
 
     def findNearestPoint(self,
@@ -568,21 +570,41 @@ class optimizing_Handler():
         # return values
         return left_cones, right_cones, orange_cones
 
+def read_input(file):
+    df = pd.read_csv(file)
+    right=[]
+    left=[]
+    orange=[]
+    for enum, row in df.iterrows():
+        if row['color']=='1':
+            right.append((row['x'],row['y']))
+        if row['color']=='2':
+            left.append((row['x'],row['y']))
+        if row['color']=='3':
+            orange.append((row['x'],row['y']))
+    return right, left, orange
+
 if __name__ == '__main__':
 
     handler = optimizing_Handler()
-    left, right, orange = handler.read_Data(filepath='/workspace/as_ros/src/global_motion_planning/scripts/track#8.csv')
-    raceline, raceline_distance, raceline_curvature = handler.run(left_cones=left, right_cones=right, orange_cones=orange)
+    filepath=r"C:\Users\lustv\Downloads\global_tracks_batch_1\global_tracks_batch_1\track#8.csv"
+    #left, right, orange = handler.read_Data(filepath='/workspace/as_ros/src/global_motion_planning/scripts/track#8.csv')
+    right, left, orange=read_input(filepath)
 
-    Raceline_Velocity = Velocity(g_x_max=1.5, g_y_max=1.5)
+    #raceline, raceline_distance, raceline_curvature, track_width = handler.run(left_cones=left, right_cones=right, orange_cones=orange)
+    midpoints, track_width = handler.run(left_cones=left, right_cones=right, orange_cones=orange)
 
-    Raceline_Velocity.run(raceline, raceline_curvature, raceline_distance, v_initial=10.5, plot=False)
+    # Raceline_Velocity = Velocity(g_x_max=1.5, g_y_max=1.5)
+
+    # Raceline_Velocity.run(raceline, raceline_curvature, raceline_distance, v_initial=10.5, plot=False)
 
     #print('Centerline-Time:', Centerline_Velocity.Time,'sec')
-    print('Raceline-Time:', Raceline_Velocity.Time,'sec')
+    # print('Raceline-Time:', Raceline_Velocity.Time,'sec')
 
     #print('Centerline-Distance:', Global_Track.centerline_distance[-1],'m')
-    print('Raceline-Distance:', handler.raceline_distance[-1],'m')
-
-    plt.plot(raceline[:,0], raceline[:,1])
+    # print('Raceline-Distance:', handler.raceline_distance[-1],'m')
+    print(len(track_width))
+    print(len(midpoints))
+    plt.plot(midpoints[:,0], midpoints[:,1])
     plt.show()
+    print('smth')

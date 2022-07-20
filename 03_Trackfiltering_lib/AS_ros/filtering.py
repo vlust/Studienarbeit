@@ -11,17 +11,17 @@ from scipy.spatial import Delaunay
 from scipy.spatial import distance as spatialdistance
 from scipy.interpolate import interp1d
 import math
-import quadprog
-import trajectory_planning_helpers as tph
-import helper_funcs_glob
-from pyclothoids import Clothoid
+# import quadprog
+# import trajectory_planning_helpers as tph
+# import helper_funcs_glob
+# from pyclothoids import Clothoid
 from scipy.optimize import minimize
 from scipy.optimize import basinhopping
 from scipy.special import expit
 import random
 import time
 from scipy.signal import find_peaks
-from mpl_toolkits import mplot3d
+# from mpl_toolkits import mplot3d
 
 class Track_Filtering():
     """
