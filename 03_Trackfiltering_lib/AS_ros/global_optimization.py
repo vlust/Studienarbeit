@@ -603,8 +603,8 @@ if __name__ == '__main__':
 
     #print('Centerline-Distance:', Global_Track.centerline_distance[-1],'m')
     # print('Raceline-Distance:', handler.raceline_distance[-1],'m')
-    print(len(track_width))
-    print(len(midpoints))
-    plt.plot(midpoints[:,0], midpoints[:,1])
+    print((track_width))
+    print((midpoints))
+    plt.plot(midpoints[:,0], midpoints[:,1], '*')
     plt.show()
     print('smth')
