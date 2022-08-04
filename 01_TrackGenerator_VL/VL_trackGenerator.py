@@ -978,10 +978,12 @@ class TrackGenerator:
     def show_cones(conedata):
         yellow_x, yellow_y, blue_x, blue_y ,orange_x, orange_y= TrackGenerator.visualize_cones(
             conedata)
+        plt.ylim(-2,2)
         plt.plot(yellow_x, yellow_y, '*', color='orange')
         plt.plot(blue_x, blue_y, '*', color='blue')
         plt.plot(orange_x, orange_y, '*', color='red')
         plt.axis('scaled')
+        # plt.ylim(-5,5)
         plt.show()
 
 

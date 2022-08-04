@@ -187,6 +187,11 @@ class optimizing_Handler():
 
             # call delauny traingulation
             self.centerline = self.Delauney(self.left_cones, self.right_cones)
+            list1, list2 = zip(*self.centerline)
+            #list3, list4 = zip(*right)
+            plt.plot(list1, list2, 'r*')
+            #plt.plot(list3, list4, 'b*')
+            plt.show()
 
             # find the midpoint between the start/finish cones
             midpoint_start = np.mean(self.orange_cones, axis=0)
@@ -283,21 +288,40 @@ class optimizing_Handler():
             # Delauney
             tri = Delaunay(coordinates)
             triangles = tri.simplices
+            right_cones = list(map(list, right_cones))
+            left_cones = list(map(list,left_cones ))
 
             # Filter Points from Delauney Triangles
             self.viz_triangles = []
-
+            #print(self.viz_triangles)
             # itterate through triangles
+            #print(triangles)
             for line in triangles:
                 # point-coordinate of ervery cone
                 element0 = coordinates[line[0]]
                 element1 = coordinates[line[1]]
                 element2 = coordinates[line[2]]
+                list_elements=[(coordinates[point]) for point in line]
+                list_elements_x=[el[0] for el in list_elements]
+                list_elements_y=[el[1] for el in list_elements]
+                plt.plot(list_elements_x ,list_elements_y)
+                # plt.show()
+                # print('smth')
+            plt.show()
+            for line in triangles:
+                # point-coordinate of ervery cone
+                element0 = coordinates[line[0]]
+                element1 = coordinates[line[1]]
+                element2 = coordinates[line[2]]
+                # print(element0)
+                # print(right_cones)
 
                 # check if first and second point are both right or both left
                 if (element0 in right_cones) and (element1 in right_cones):
+                    print('not real1')
                     pass
                 elif (element0 in left_cones) and (element1 in left_cones):
+                    print('not real2')
                     pass
                 else:
                     self.centerline = np.append(self.centerline, self.getWaypointCoordinate(element0, element1))
@@ -587,9 +611,16 @@ def read_input(file):
 if __name__ == '__main__':
 
     handler = optimizing_Handler()
-    filepath=r"C:\Users\lustv\Downloads\global_tracks_batch_1\global_tracks_batch_1\track#8.csv"
+    # filepath=r"C:\Users\lustv\Downloads\global_tracks_batch_1\global_tracks_batch_1\track#8.csv"
+    filepath=r"C:\Users\Anwender\Downloads\global_tracks_batch_1 (1)\global_tracks_batch_1\track#8.csv"
     #left, right, orange = handler.read_Data(filepath='/workspace/as_ros/src/global_motion_planning/scripts/track#8.csv')
     right, left, orange=read_input(filepath)
+
+    # list1, list2 = zip(*left)
+    # list3, list4 = zip(*right)
+    # plt.plot(list1, list2, 'r*')
+    # plt.plot(list3, list4, 'b*')
+    # plt.show()
 
     #raceline, raceline_distance, raceline_curvature, track_width = handler.run(left_cones=left, right_cones=right, orange_cones=orange)
     midpoints, track_width = handler.run(left_cones=left, right_cones=right, orange_cones=orange)
